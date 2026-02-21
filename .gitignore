@@ -1,0 +1,29 @@
+# Ambiente virtual
+venv/
+.env/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+#dados
+dados_brutos/*
+dados_tratados/*
+
+!dados_brutos/.gitkeep
+!dados_tratados/.gitkeep
