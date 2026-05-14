@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # Cabeçalho
-st.title("Dashboard IFRS Campus Restinga: Indicadores de Permanência e Êxito dos Estudantes")
+st.title("IFRS Campus Restinga: Indicadores de Permanência e Êxito dos Estudantes")
 
 st.markdown(
     """
@@ -31,8 +31,7 @@ st.markdown(
 st.markdown("---")
 
 # ── Descrição das páginas ─────────────────────────────────────────────────────
-st.markdown("## Navegação")
-st.markdown("Use o menu lateral para acessar cada seção do dashboard:")
+st.markdown("### Use o menu lateral para acessar cada seção do dashboard:")
 
 
 
@@ -63,7 +62,7 @@ st.markdown(
 st.markdown("---")
 
 # ── Resumo dos indicadores ───────────────────────────────────────────────────
-st.markdown("## Indicadores monitorados")
+st.markdown("### Indicadores de Permanência e Êxito:")
 
 st.markdown(
 
@@ -75,7 +74,6 @@ st.markdown(
     | **TR** | Taxa de Retenção | % de alunos além do prazo previsto em relação às matrículas atendidas |
     | **IEf** | Índice de Eficiência | % de concluintes entre os que finalizaram o vínculo |
     | **TPE** | Taxa de Permanência e Êxito | TC + Taxa de Matrícula Continuada Regular |
-    | **TEFAcad** | Taxa de Efetividade Acadêmica | % de concluintes no prazo relação aos previstos |
     | **MREG** | Matrículas Ativas Regulares | matrículas ativas e dentro do prazo previsto de conclusão do curso |
     | **MRET** | Matrículas Ativas Retidas | matrículas ativas após a data prevista para conclusão do curso |
     """

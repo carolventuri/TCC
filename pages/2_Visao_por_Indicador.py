@@ -60,10 +60,9 @@ with col_f3:
         "TR":      "Taxa de Retenção",
         "IEf":     "Índice de Eficiência",
         "TPE":     "Taxa de Permanência e Êxito",
-        "TEFAcad": "Taxa de Efetividade Acadêmica",
     }
     indicador = st.selectbox(
-        "Indicador a analisar (gráficos 6, 7 e 8)",
+        "Indicador a analisar (gráficos 6 e 8)",
         options=list(ROTULOS_INDICADORES.keys()),
         format_func=lambda x: ROTULOS_INDICADORES[x],
     )
@@ -103,7 +102,7 @@ fig_g6 = px.bar(
     labels={indicador: f"{ROTULOS_INDICADORES[indicador]} (%)", "Tipo de Curso": "Tipo de Curso"},
 )
 fig_g6.update_xaxes(tickmode="linear", dtick=1)
-st.plotly_chart(fig_g6, use_container_width=True)
+st.plotly_chart(fig_g6, width='stretch')
 
 # 7: Ranking do indicador por curso (último ano)
 st.markdown(f"### 7 - Ranking de {ROTULOS_INDICADORES[indicador]} por Curso ({ultimo_ano})")
@@ -129,7 +128,7 @@ fig_g7 = px.bar(
     labels={indicador: f"{ROTULOS_INDICADORES[indicador]} (%)", "Nome de Curso": ""},
 )
 fig_g7.update_layout(coloraxis_showscale=False)
-st.plotly_chart(fig_g7, use_container_width=True)
+st.plotly_chart(fig_g7, width='stretch')
 
 # 8: Heatmap do indicador por Curso × Ano
 st.markdown(f"### 8 — Mapa de Calor: {ROTULOS_INDICADORES[indicador]} por Curso e Ano")
@@ -152,16 +151,16 @@ fig_g8 = px.imshow(
     labels={"color": f"{ROTULOS_INDICADORES[indicador]} (%)"},
     aspect="auto",
 )
-st.plotly_chart(fig_g8, use_container_width=True)
+st.plotly_chart(fig_g8, width='stretch')
 
 # 9: Heatmap de todos os indicadores por curso (último ano)
 st.markdown(f"### 9 — Todos os Indicadores por Curso ({ultimo_ano})")
 st.markdown(
-    "Visão consolidada de TC, TE, TR, IEf, TPE e TEFAcad para todos os cursos "
+    "Visão consolidada de TC, TE, TR, IEf e TPE para todos os cursos "
     f"no último ano disponível ({ultimo_ano}). "
 )
 
-todos_indicadores = ["TC", "TE", "TR", "IEf", "TPE", "TEFAcad"]
+todos_indicadores = ["TC", "TE", "TR", "IEf", "TPE"]
 
 # Seleciona apenas o último ano e usa o nome do curso como índice da tabela
 pivot_todos = (
@@ -176,4 +175,4 @@ fig_g9 = px.imshow(
     labels={"color": "(%)"},
     aspect="auto",
 )
-st.plotly_chart(fig_g9, use_container_width=True)
+st.plotly_chart(fig_g9, width='stretch')

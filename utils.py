@@ -18,13 +18,14 @@ CAMINHO_DADOS = "dados_tratados/restinga_dados_tratados.parquet"
 
 # Uma cor para cada indicador
 CORES_INDICADORES = {
-    "TC":      "#2196F3",   # azul        – Taxa de Conclusão
-    "TE":      "#F44336",   # vermelho    – Taxa de Evasão
-    "TR":      "#FF9800",   # laranja     – Taxa de Retenção
-    "IEf":     "#4CAF50",   # verde       – Índice de Eficiência
-    "TPE":     "#9C27B0",   # roxo        – Taxa de Permanência e Êxito
-    "TEFAcad": "#00BCD4",   # ciano       – Taxa de Efetividade Acadêmica
+    "TC":       "#4E79A7",  # azul
+    "TE":       "#E15759",  # vermelho
+    "TR":       "#F28E2B",  # laranja
+    "IEf":      "#59A14F",  # verde
+    "TPE":      "#B07AA1",  # lilás
 }
+
+
  
 # Uma cor para cada situação de matrícula
 CORES_SITUACAO = {
@@ -127,18 +128,13 @@ def calcular_indicadores(df, agrupamento):
         (df_indicadores["conc_no_prazo"] + df_indicadores["conc_com_atraso"])
         / matr_finalizadas * 100
     )
-
-    # t_matr_cont_reg — Taxa de Matrícula Continuada Regular - para o cálculo da TPE
-    df_indicadores["t_matr_cont_reg"] = df_indicadores["MREG"] / ma * 100
+        
+    # TMREG — Taxa de Matrícula Continuada Regular
+    df_indicadores["TMREG"] = df_indicadores["MREG"] / ma * 100
 
     # TPE — Taxa de Permanência e Êxito
-    df_indicadores["TPE"] = df_indicadores["TC"] + df_indicadores["t_matr_cont_reg"]
+    df_indicadores["TPE"] = df_indicadores["TC"] + df_indicadores["TMREG"]
 
-    # TEFAcad — Taxa de Efetividade Acadêmica
-    df_indicadores["TEFAcad"] = (
-        df_indicadores["conc_no_prazo"]
-        / df_indicadores["conc_previstos"].replace(0, np.nan) * 100
-    )
 
     return df_indicadores.fillna(0).round(2)
 

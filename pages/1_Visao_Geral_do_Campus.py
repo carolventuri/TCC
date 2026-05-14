@@ -35,12 +35,11 @@ st.markdown(
 # Carga dos dados 
 df_completo = carregar_dados(CAMINHO_DADOS)
  
-# Filtros desta página 
-
+# Filtros desta página
 st.markdown("### Filtros")
- 
-col_f1, col_f2 = st.columns(2)
- 
+
+col_f1, col_f2, col_f3 = st.columns(3)
+
 with col_f1:
     anos_disponiveis = sorted(df_completo["Ano"].unique())
     periodo = st.slider(
@@ -49,7 +48,7 @@ with col_f1:
         max_value=int(max(anos_disponiveis)),
         value=(int(min(anos_disponiveis)), int(max(anos_disponiveis))),
     )
- 
+
 with col_f2:
     tipos_disponiveis = sorted(df_completo["Tipo de Curso"].unique())
     tipos_selecionados = st.multiselect(
@@ -57,12 +56,21 @@ with col_f2:
         options=tipos_disponiveis,
         default=tipos_disponiveis,
     )
- 
-# Aplica os filtros no DataFrame
+
+with col_f3:
+    cursos_disponiveis = sorted(df_completo["Nome de Curso"].unique())
+    cursos_selecionados = st.multiselect(
+        "Curso",
+        options=cursos_disponiveis,
+        default=cursos_disponiveis,
+    )
+
+# Aplica os filtros
 df = df_completo[
     (df_completo["Ano"] >= periodo[0])
     & (df_completo["Ano"] <= periodo[1])
     & (df_completo["Tipo de Curso"].isin(tipos_selecionados))
+    & (df_completo["Nome de Curso"].isin(cursos_selecionados))
 ].copy()
  
 # Calcula os indicadores agrupados por Ano (campus inteiro)
@@ -72,17 +80,25 @@ ind_ano = calcular_indicadores(df, ["Ano"])
 # 1: Evolução dos indicadores percentuais por ano (linhas)
 st.markdown("### 1 — Evolução dos Indicadores por Ano")
 st.markdown(
-    "Mostra como TC, TE, TR, TPE, IEf e TEFAcad evoluíram ao longo do tempo. "
+    "Mostra como os indicadores de permanência e êxito evoluíram ao longo do tempo. "
 )
- 
+
+mapeamento_indicadores = {
+    "TC": "Taxa de Conclusão",
+    "TE": "Taxa de Evasão",
+    "TR": "Taxa de Retenção",
+    "TPE": "Taxa de Permanência e Êxito",
+    "IEf": "Índice de Eficiência",
+}
+
 # melt() transforma o DataFrame de formato largo (uma coluna por indicador) para formato longo 
 ind_longo = ind_ano.melt(
     id_vars="Ano",
-    value_vars=["TC", "TE", "TR", "TPE", "IEf", "TEFAcad"],
+    value_vars=["TC", "TE", "TR", "TPE", "IEf"],
     var_name="Indicador",
     value_name="Valor (%)",
 )
- 
+
 fig_g1 = px.line(
     ind_longo,
     x="Ano",
@@ -92,6 +108,14 @@ fig_g1 = px.line(
     color_discrete_map=CORES_INDICADORES,
     labels={"Indicador": "", "Valor (%)": "(%)"},
 )
+# troca apenas o nome exibido na legenda
+for trace in fig_g1.data:
+    trace.name = mapeamento_indicadores.get(trace.name, trace.name)
+    trace.hovertemplate = trace.hovertemplate.replace(
+        trace.legendgroup,
+        mapeamento_indicadores.get(trace.legendgroup, trace.legendgroup)
+    )
+
 fig_g1.update_xaxes(tickmode="linear", dtick=1)
 fig_g1.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.2))
 st.plotly_chart(fig_g1, width='stretch')
@@ -145,10 +169,21 @@ with col_g3:
         color="Categoria da Situação",
         barmode="stack",
         color_discrete_map=CORES_CATEGORIA,
-        labels={"Qtd": "Matrículas", "Categoria da Situação": "Categoria"},
+        labels={"Qtd": "Matrículas", "Categoria da Situação": ""},
         text_auto=True,
     )
+    
     fig_g3.update_xaxes(tickmode="linear", dtick=1)
+    
+    fig_g3.update_layout(
+    legend=dict(
+        orientation="h",   # horizontal
+        yanchor="top",
+        y=-0.2,            # posição abaixo do gráfico
+        xanchor="center",
+        x=0.5
+    )
+)    
     st.plotly_chart(fig_g3, width='stretch')
  
 with col_g4:
@@ -181,7 +216,7 @@ with col_g4:
             "Ingressantes": "#7E57C2",
             "Concluintes":  "#2196F3",
         },
-        labels={"Tipo": ""},
+        labels={"Tipo": "", "Quantidade": "Matrículas"}, 
     )
     fig_g4.update_xaxes(tickmode="linear", dtick=1)
     fig_g4.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.2))
