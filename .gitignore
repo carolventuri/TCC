@@ -23,7 +23,7 @@ Thumbs.db
 
 #dados
 dados_brutos/*
-dados_tratados/*
+#dados_tratados/*
 
 !dados_brutos/.gitkeep
-!dados_tratados/.gitkeep
+#!dados_tratados/.gitkeep

@@ -3,21 +3,21 @@ pages/4_Analise_Evasao_e_Retencao.py — Análise de evasão e retenção.
 
 Gráficos desta página:
      — Barras empilhadas:  motivos de saída por ano
-     — Pizza (donut):      composição total das evasões
-     — Barras empilhadas:  conclusões no prazo vs. com atraso por curso
-     
-     
-     
+     — Barras empilhadas:  conclusões no prazo vs. com atraso por curso   
 """
 
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+import numpy as np
 
 from utils import (
     carregar_dados,
     calcular_indicadores,
     CAMINHO_DADOS,
     CORES_SITUACAO,
+    CORES_CATEGORIA
 )
 
 # Configuração da página
@@ -72,6 +72,7 @@ df = df_completo[
 # Calcula os indicadores necessários
 ind_ano_curso = calcular_indicadores(df, ["Ano", "Nome de Curso"])
 
+
 st.markdown("---")
 
 #  XXXX : Motivos de saída por ano (barras empilhadas)
@@ -103,33 +104,6 @@ fig_g12 = px.bar(
 fig_g12.update_xaxes(tickmode="linear", dtick=1)
 st.plotly_chart(fig_g12, width='stretch')
 
-
-
-st.markdown("### — Composição Total das Evasões")
-st.markdown(
-    "Proporção de cada motivo de evasão no período selecionado."
-)
-
-# Filtra apenas os evadidos e conta por situação
-evadidos_por_situacao = (
-    df[df["Categoria da Situação"] == "Evadidos"]
-    ["Situação de Matrícula"]
-    .value_counts()
-    .reset_index()
-)
-evadidos_por_situacao.columns = ["Motivo", "Qtd"]
-
-fig_g13 = px.pie(
-    evadidos_por_situacao,
-    names="Motivo",
-    values="Qtd",
-    hole=0.4,
-    color="Motivo",
-    color_discrete_map=CORES_SITUACAO,
-)
-fig_g13.update_traces(textposition="outside", textinfo="percent+label")
-fig_g13.update_layout(showlegend=False)
-st.plotly_chart(fig_g13, width='stretch')
 
 
 st.markdown("### — Conclusões: No Prazo vs. Com Atraso")
