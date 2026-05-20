@@ -38,8 +38,8 @@ st.markdown("### Use o menu lateral para acessar cada seção do dashboard:")
 st.markdown(
         """
         :classical_building: **Visão Geral do Campus**: 
-        Panorama completo do campus: evolução dos indicadores,
-        volume de matrículas por ano e distribuição geral das situações de matrícula.
+        Panorama completo, demonstrando a evolução dos indicadores,
+        volume de matrículas por ano, distribuição geral das situações de matrícula, evasão e conclusão.
         
         :bar_chart: **Visão por Indicador**: 
         Análise detalhada de cada indicador (TC, TE, TR, IEf, TPE, TEFAcad)
@@ -47,12 +47,8 @@ st.markdown(
        
         :mortar_board: **Perfil dos Estudantes**: 
         Distribuição sociodemográfica: sexo, cor/raça, faixa etária,
-        renda familiar e turno — com cruzamentos por evasão e tipo de curso.
+        renda familiar e turno — com cruzamentos por evasão e retenção.
        
-        :mag: **Análise de Evasão e Retenção**: 
-        Estudo aprofundado dos motivos de evasão, evolução temporal,
-        correlações entre indicadores e comparação entre cursos.
-
         :clipboard: **Tabelas de Dados**: 
         Consulta e exportação das tabelas de indicadores calculados,
         com opção de download em formato CSV.
