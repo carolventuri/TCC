@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import streamlit as st
  
- 
 CAMINHO_DADOS = "dados_tratados/restinga_dados_tratados.parquet"
  
 
@@ -24,8 +23,6 @@ CORES_INDICADORES = {
     "IEf":      "#59A14F",  # verde
     "TPE":      "#B07AA1",  # lilás
 }
-
-
  
 # Uma cor para cada situação de matrícula
 CORES_SITUACAO = {
@@ -63,6 +60,65 @@ CORES_CURSO = {
     "Técnico em Agroecologia":              "#4361EE",  # azul
 }
 
+
+# Foram escolhidas cores para o modo light, com bom contraste e sem depender de tons muito próximos.
+PALETA_QUALITATIVA_LIGHT = [
+    "#2E7D32",  # verde
+    "#C62828",  # vermelho
+    "#6A1B9A",  # roxo
+    "#EF6C00",  # laranja
+    "#00838F",  # teal
+    "#AD1457",  # magenta
+    "#827717",  # oliva
+    "#5D4037",  # marrom
+    "#455A64",  # cinza azulado
+    "#F9A825",  # âmbar
+    "#00897B",  # verde azulado
+    "#8E24AA",  # violeta
+]
+
+CORES_SITUACAO_LIGHT = {
+    "Abandono": "#D55E00",              # laranja queimado
+    "Desligada": "#7B1FA2",            # roxo
+    "Transf. externa": "#009E73",      # verde azulado
+    "Transf. interna": "#E69F00",      # âmbar
+    "Concluída no prazo": "#2E7D32",   # verde
+    "Concluída com atraso": "#C62828", # vermelho
+}
+
+CORES_CONCLUSAO_LIGHT = {
+    "Concluída no prazo": "#2E7D32",
+    "Concluída com atraso": "#D55E00",
+}
+
+COR_TEMPO_MEDIANO = "#6A1B9A"
+
+CORES_MATRICULAS_ATIVAS_LIGHT = {
+    "MREG": "#2E7D32",  # verde
+    "MRET": "#D55E00",  # laranja queimado
+}
+
+CORES_FLUXO_LIGHT = {
+    "Ingressantes": "#6A1B9A",  # roxo
+    "Concluintes": "#00838F",   # teal
+}
+
+ROTULOS_INDICADORES = {
+    "TC": "Taxa de Conclusão",
+    "TE": "Taxa de Evasão",
+    "TR": "Taxa de Retenção",
+    "IEf": "Índice de Eficiência",
+    "TPE": "Taxa de Permanência e Êxito",
+}
+
+PALETA_TIPO_CURSO = [
+    "#2E7D32",  # verde
+    "#6A1B9A",  # roxo
+    "#EF6C00",  # laranja
+    "#00838F",  # teal
+    "#AD1457",  # magenta
+]
+
  
 # CARGA DOS DADOS
 # O decorator @st.cache_data faz o Streamlit guardar o resultado em memória
@@ -91,7 +147,6 @@ def calcular_indicadores(df, agrupamento):
             transf_ext      = ("Situação de Matrícula",  lambda x: (x == "Transf. externa").sum()),
             transf_int      = ("Situação de Matrícula",  lambda x: (x == "Transf. interna").sum()),
             integralizadas  = ("Situação de Matrícula",  lambda x: (x == "Integralizada").sum()),
-            conc_previstos  = ("Concluinte_Previsto",    "sum"),
             MREG            = ("Situação de Matrícula",
                                lambda x: ((x == "Em fluxo") | (x == "Ingressante")).sum()),
             MRET            = ("Situação de Matrícula",  lambda x: (x == "Retido").sum()),
@@ -139,3 +194,40 @@ def calcular_indicadores(df, agrupamento):
     return df_indicadores.fillna(0).round(2)
 
 
+# Layout e mapa de cores
+
+def gerar_mapa_cores(valores, paleta=PALETA_QUALITATIVA_LIGHT):
+    """Gera um dicionário de cores estável para categorias textuais."""
+    valores_ordenados = sorted(pd.Series(valores).dropna().unique())
+    return {valor: paleta[i % len(paleta)] for i, valor in enumerate(valores_ordenados)}
+
+
+def aplicar_layout_light(fig, altura=None, legenda_y=-0.2):
+    """Padroniza a aparência dos gráficos para o modo light do Streamlit."""
+    fig.update_layout(
+        template="plotly_white",
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(color="#263238"),
+        title=dict(text=""),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=legenda_y,
+            xanchor="center",
+            x=0.5,
+        ),
+        legend_title_text="",
+        margin=dict(l=20, r=20, t=40, b=85),
+    )
+
+    if altura is not None:
+        fig.update_layout(height=altura)
+
+    fig.update_xaxes(showgrid=True, gridcolor="#ECEFF1", zeroline=False)
+    fig.update_yaxes(showgrid=True, gridcolor="#ECEFF1", zeroline=False)
+
+    return fig
+
+def escala_indicador(indicador):
+    return "OrRd" if indicador in ["TE", "TR"] else "YlGn"

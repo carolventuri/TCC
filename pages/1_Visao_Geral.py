@@ -7,6 +7,11 @@ Gráficos desta página:
     3 — Barras empilhadas: matrículas atendidas por ano e categoria
     4 — Linha:             Ingressantes e Concluintes por ano
     5 — Barras empilhadas: matrículas por curso e ano
+    6 - Barras empilhadas : motivos de saída por ano
+    7 - Barras horizontais: Proporção de motivos de evasão por curso (último ano)
+    8 - Barras empilhadas: Conclusões: No Prazo vs. Com Atraso por Curso
+    9 - Barras horizontais: Tempo Mediano de Conclusão por Curso
+    10 - Boxplot : Distribuição do Tempo até Conclusão por Curso
 """
  
 import streamlit as st
@@ -17,20 +22,28 @@ import pandas as pd
 from utils import (
     carregar_dados,
     calcular_indicadores,
+    aplicar_layout_light,
+    gerar_mapa_cores,
     CAMINHO_DADOS,
     CORES_INDICADORES,
     CORES_SITUACAO,
     CORES_CURSO,
     CORES_CATEGORIA,
+    PALETA_QUALITATIVA_LIGHT,
+    CORES_SITUACAO_LIGHT,
+    CORES_CONCLUSAO_LIGHT,
+    COR_TEMPO_MEDIANO,
+    CORES_MATRICULAS_ATIVAS_LIGHT,
+    CORES_FLUXO_LIGHT,
 )
+
  
 # Configuração da página 
 st.set_page_config(page_title="Visão Geral", page_icon=":classical_building:", layout="wide")
 st.title(":classical_building: Visão Geral")
 st.markdown(
-    "#### Panorama geral de Permanência e Êxito do IFRS Campus Restinga."
+    "#### Panorama geral de Permanência e Êxito dos Estudantes do IFRS Campus Restinga."
 )
-
 
 # Carga dos dados 
 df_completo = carregar_dados(CAMINHO_DADOS)
@@ -72,10 +85,17 @@ df = df_completo[
     & (df_completo["Tipo de Curso"].isin(tipos_selecionados))
     & (df_completo["Nome de Curso"].isin(cursos_selecionados))
 ].copy()
+
+# Mapa de cores dos cursos recalculado após os filtros.
+CORES_CURSO_LIGHT = gerar_mapa_cores(df["Nome de Curso"])
  
 # Calcula os indicadores agrupados por Ano (campus inteiro)
 ind_ano = calcular_indicadores(df, ["Ano"])
- 
+
+
+st.markdown("---")
+# SEÇÃO — INDICADORES E MATRÍCULAS
+st.markdown("## Indicadores e Matrículas")
   
 # 1: Evolução dos indicadores percentuais por ano (linhas)
 st.markdown("### 1 — Evolução dos Indicadores por Ano")
@@ -117,8 +137,10 @@ for trace in fig_g1.data:
     )
 
 fig_g1.update_xaxes(tickmode="linear", dtick=1)
-fig_g1.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.2))
+fig_g1.update_layout(hovermode="x unified")
+aplicar_layout_light(fig_g1, legenda_y=-0.2)
 st.plotly_chart(fig_g1, width='stretch')
+ 
  
 # 2: Evolução de MREG e MRET por ano (linhas)
 st.markdown("### 2 — Matrículas Ativas Regulares (MREG) e Retidas (MRET) por Ano")
@@ -140,11 +162,12 @@ fig_g2 = px.line(
     y="Matrículas",
     color="Tipo",
     markers=True,
-    color_discrete_map={"MREG": "#4CAF50", "MRET": "#FF9800"},
+    color_discrete_map=CORES_MATRICULAS_ATIVAS_LIGHT,
     labels={"Tipo": ""},
 )
 fig_g2.update_xaxes(tickmode="linear", dtick=1)
-fig_g2.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.2))
+fig_g2.update_layout(hovermode="x unified")
+aplicar_layout_light(fig_g2, legenda_y=-0.2)
 st.plotly_chart(fig_g2, width='stretch')
  
 #  Gráficos 3 e 4 lado a lado 
@@ -174,16 +197,7 @@ with col_g3:
     )
     
     fig_g3.update_xaxes(tickmode="linear", dtick=1)
-    
-    fig_g3.update_layout(
-    legend=dict(
-        orientation="h",   # horizontal
-        yanchor="top",
-        y=-0.2,            # posição abaixo do gráfico
-        xanchor="center",
-        x=0.5
-    )
-)    
+    aplicar_layout_light(fig_g3, legenda_y=-0.2)
     st.plotly_chart(fig_g3, width='stretch')
  
 with col_g4:
@@ -212,14 +226,12 @@ with col_g4:
         y="Quantidade",
         color="Tipo",
         markers=True,
-        color_discrete_map={
-            "Ingressantes": "#7E57C2",
-            "Concluintes":  "#2196F3",
-        },
+        color_discrete_map=CORES_FLUXO_LIGHT,
         labels={"Tipo": "", "Quantidade": "Matrículas"}, 
     )
     fig_g4.update_xaxes(tickmode="linear", dtick=1)
-    fig_g4.update_layout(hovermode="x unified", legend=dict(orientation="h", y=-0.2))
+    fig_g4.update_layout(hovermode="x unified")
+    aplicar_layout_light(fig_g4, legenda_y=-0.2)
     st.plotly_chart(fig_g4, width='stretch')
  
  
@@ -240,11 +252,12 @@ fig_g5 = px.bar(
     x="Ano",
     y="Qtd",
     color="Nome de Curso",
-    color_discrete_map=CORES_CURSO,
+    color_discrete_map=CORES_CURSO_LIGHT,
     barmode="stack",
     labels={"Qtd": "Matrículas", "Nome de Curso": "Curso"},
 )
 fig_g5.update_xaxes(tickmode="linear", dtick=1)
+aplicar_layout_light(fig_g5, legenda_y=-0.25)
 st.plotly_chart(fig_g5, width='stretch')
 
 import plotly.graph_objects as go
@@ -253,7 +266,7 @@ import numpy as np
 st.markdown("---")
 
 
-# SEÇÃO 2 — EVASÃO
+# SEÇÃO — EVASÃO
 
 st.markdown("## Evasão")
 
@@ -264,7 +277,6 @@ with col_g6:
     st.markdown("### 6 — Motivos de Saída por Ano")
     st.markdown(
         "Evolução do volume de cada tipo de saída ao longo da série histórica. "
-        "Identifica se houve aumento de abandono em determinados anos."
     )
 
     situacoes_saida = ["Abandono", "Desligada", "Transf. externa", "Transf. interna"]
@@ -281,22 +293,20 @@ with col_g6:
         x="Ano", y="Qtd",
         color="Situação de Matrícula",
         barmode="stack",
-        color_discrete_map=CORES_SITUACAO,
+        color_discrete_map=CORES_SITUACAO_LIGHT,
         labels={"Qtd": "Matrículas", "Situação de Matrícula": "Motivo"},
         text_auto=True,
     )
     fig_g6.update_xaxes(tickmode="linear", dtick=1)
-    fig_g6.update_layout(legend=dict(orientation="h", y=-0.3))
+    aplicar_layout_light(fig_g6, legenda_y=-0.3)
     st.plotly_chart(fig_g6, width="stretch")
 
 with col_g7:
-    # ── Gráfico 7: Proporção de motivos de evasão por curso (último ano) ─────
+    # Gráfico 7: Proporção de motivos de evasão por curso (último ano)
     ultimo_ano = int(df_completo["Ano"].max())
     st.markdown(f"### 7 — Motivos de Evasão por Curso ({ultimo_ano})")
     st.markdown(
-        f"Proporção de cada motivo de evasão por curso em **{ultimo_ano}**. "
-        "Cursos com predominância de 'Abandono' indicam problema de acolhimento; "
-        "'Desligada' aponta para dificuldades de desempenho."
+        f"Volume de cada motivo de evasão por curso em **{ultimo_ano}**. "
     )
 
     motivos_ev = ["Abandono", "Desligada", "Transf. externa"]
@@ -325,65 +335,100 @@ with col_g7:
         color="Situação de Matrícula",
         orientation="h",
         barmode="stack",
-        color_discrete_map=CORES_SITUACAO,
-        text_auto="True",
+        color_discrete_map=CORES_SITUACAO_LIGHT,
+        text_auto=True,
         labels={"Qtd": "Matrículas", "Nome de Curso": "", "Situação de Matrícula": "Motivo"},
         category_orders={"Nome de Curso": ordem_cursos},
     )
-    fig_g7.update_layout(
-        legend=dict(orientation="h", y=-0.2),
-    )
+    aplicar_layout_light(fig_g7, legenda_y=-0.2)
     st.plotly_chart(fig_g7, width="stretch")
 
 st.markdown("---")
 
 
-# SEÇÃO 3 — CONCLUSÃO
+# SEÇÃO — CONCLUSÃO
 
 st.markdown("## Conclusão")
 
-# Prepara df_concluidos (necessário para gráficos 9, 10 e 11)
-@st.cache_data
-def preparar_concluidos(df_base, tipos, cursos):
+# Prepara df_concluidos (necessário para gráficos 9 e 10)
+def preparar_concluidos(df_base):
+    """
+    Prepara uma base única de concluintes para os gráficos de tempo de conclusão.
+
+    Regras adotadas:
+    1. Usa a base já filtrada na página (período, tipo de curso e curso).
+    2. Considera apenas situações finais de conclusão:
+       - Concluída no prazo
+       - Concluída com atraso
+    3. Remove duplicidades por matrícula, preservando a última ocorrência registrada.
+       Isso evita contar duas vezes o mesmo estudante se houver linhas repetidas.
+    4. Calcula o tempo de conclusão em anos:
+       (Mês de Ocorrência da Situação - Data de Início do Ciclo) / 365,25.
+    """
     dc = df_base[
-        (df_base["Tipo de Curso"].isin(tipos))
-        & (df_base["Nome de Curso"].isin(cursos))
-        & (df_base["Situação de Matrícula"].isin(["Concluída no prazo", "Concluída com atraso"]))
+        df_base["Situação de Matrícula"].isin(["Concluída no prazo", "Concluída com atraso"])
     ].copy()
 
-    dc["Data de Inicio do Ciclo"] = pd.to_datetime(dc["Data de Inicio do Ciclo"], errors="coerce")
+    dc["Data de Inicio do Ciclo"] = pd.to_datetime(
+        dc["Data de Inicio do Ciclo"], errors="coerce"
+    )
     dc["Mês De Ocorrência da Situação"] = pd.to_datetime(
         dc["Mês De Ocorrência da Situação"], errors="coerce"
     )
+
+    dc = dc.dropna(subset=[
+        "Código da Matricula",
+        "Nome de Curso",
+        "Tipo de Curso",
+        "Data de Inicio do Ciclo",
+        "Mês De Ocorrência da Situação",
+    ])
+
+    # Se houver mais de uma linha para a mesma matrícula, fica a ocorrência final.
+    dc = dc.sort_values("Mês De Ocorrência da Situação")
+    dc = dc.drop_duplicates(subset=["Código da Matricula"], keep="last")
+
     dc["Anos_Conclusao"] = (
         (dc["Mês De Ocorrência da Situação"] - dc["Data de Inicio do Ciclo"])
         .dt.days / 365.25
-    ).round(2)
+    )
 
     dc["Ano_Ingresso"] = dc["Data de Inicio do Ciclo"].dt.year
+    dc["Ano_Conclusao"] = dc["Mês De Ocorrência da Situação"].dt.year
+
     dc = dc[
         (dc["Anos_Conclusao"] > 0)
         & (dc["Anos_Conclusao"] < 15)
-        & (dc["Ano_Ingresso"] >= 2017)
-    ]
+    ].copy()
+
+    dc["Anos_Conclusao"] = dc["Anos_Conclusao"].round(2)
     return dc
 
 
-df_conc = preparar_concluidos(df_completo, tipos_selecionados, cursos_selecionados)
+df_conc = preparar_concluidos(df)
 
-# ── Gráfico 8: Conclusões no prazo vs. com atraso por curso ──────────────────
+# Gráfico 8: Conclusões no prazo vs. com atraso por curso
 st.markdown("### 8 — Conclusões: No Prazo vs. Com Atraso por Curso")
 st.markdown(
     "Volume de concluintes por curso separado em 'Concluída no prazo' e "
-    "'Concluída com atraso'. Cursos com alta proporção de conclusão com atraso "
-    "confirmam o problema de retenção."
+    "'Concluída com atraso'."
 )
 
+# Usa contagem distinta de matrículas para evitar duplicidades.
 conc_prazo = (
-    df[df["Categoria da Situação"] == "Concluintes"]
-    .groupby(["Nome de Curso", "Situação de Matrícula"])["Código da Matricula"]
-    .count()
-    .reset_index(name="Qtd")
+    df[
+        df["Situação de Matrícula"].isin(["Concluída no prazo", "Concluída com atraso"])
+    ]
+    .groupby(["Nome de Curso", "Situação de Matrícula"], as_index=False)["Código da Matricula"]
+    .nunique()
+    .rename(columns={"Código da Matricula": "Qtd"})
+)
+
+ordem_conclusao = (
+    conc_prazo.groupby("Nome de Curso")["Qtd"]
+    .sum()
+    .sort_values(ascending=False)
+    .index.tolist()
 )
 
 fig_g8 = px.bar(
@@ -391,14 +436,13 @@ fig_g8 = px.bar(
     x="Nome de Curso", y="Qtd",
     color="Situação de Matrícula",
     barmode="stack",
-    color_discrete_map=CORES_SITUACAO,
+    color_discrete_map=CORES_CONCLUSAO_LIGHT,
     labels={"Qtd": "Concluintes", "Nome de Curso": "", "Situação de Matrícula": "Situação"},
     text_auto=True,
+    category_orders={"Nome de Curso": ordem_conclusao},
 )
-fig_g8.update_layout(
-    xaxis_tickangle=-30,
-    legend=dict(orientation="h", y=-0.2),
-)
+fig_g8.update_layout(xaxis_tickangle=-30)
+aplicar_layout_light(fig_g8, legenda_y=-0.5)
 st.plotly_chart(fig_g8, width="stretch")
 
 # Gráficos 9 e 10 lado a lado
@@ -411,6 +455,18 @@ with col_g9:
         "Mediana de anos entre o ingresso e a conclusão do curso. "
     )
 
+    with st.expander("Como o tempo mediano de conclusão foi calculado"):
+        st.markdown(
+            """
+            **Base usada:** base filtrada da página: período, tipo de curso e curso.  
+            **Quem entra no cálculo:** apenas matrículas com situação **Concluída no prazo** ou **Concluída com atraso**.  
+            **Unidade de contagem:** matrícula distinta (`Código da Matricula`), para evitar duplicidade caso a mesma matrícula apareça mais de uma vez.  
+            **Tempo individual de conclusão:** diferença entre `Mês De Ocorrência da Situação` e `Data de Inicio do Ciclo`, dividida por **365,25**.  
+            **Mediana por curso:** depois de calcular o tempo individual de cada concluinte, a mediana é calculada por curso. Assim, se um curso tiver 5 concluintes, o valor exibido é o tempo central; se tiver 4, é a média dos dois tempos centrais.  
+            **Filtros de consistência:** foram removidos registros sem datas válidas, tempos negativos/zero e tempos iguais ou superiores a 15 anos.
+            """
+        )
+
     if len(df_conc) > 0:
         tempo_mediano = (
             df_conc.groupby(["Nome de Curso", "Tipo de Curso"])["Anos_Conclusao"]
@@ -421,18 +477,15 @@ with col_g9:
         )
 
 
-        tempo_mediano["Cor"] = "#FF9800"
-
         fig_g9 = px.bar(
             tempo_mediano,
             x="Mediana", y="Nome de Curso",
             orientation="h",
-            color="Cor",
-            color_discrete_map={"#4CAF50": "#4CAF50", "#FF9800": "#FF9800"},
             text="Mediana",
-            labels={"Mediana": "Mediana (anos)", "Nome de Curso": "", "Cor": ""},
+            labels={"Mediana": "Mediana (anos)", "Nome de Curso": ""},
             custom_data=["Media", "N", "Tipo de Curso"],
         )
+        fig_g9.update_traces(marker_color=COR_TEMPO_MEDIANO)
         fig_g9.update_traces(
             texttemplate="%{x:.2f}",
             textposition="outside",
@@ -449,6 +502,7 @@ with col_g9:
             showlegend=False,
             xaxis=dict(range=[0, tempo_mediano["Mediana"].max() * 1.2]),
         )
+        aplicar_layout_light(fig_g9)
         st.plotly_chart(fig_g9, width="stretch")
     else:
         st.info("Sem dados de concluídos para o filtro selecionado.")
@@ -458,7 +512,6 @@ with col_g10:
     st.markdown("### 10 — Distribuição do Tempo até Conclusão por Curso")
     st.markdown(
         "Boxplot complementa o gráfico 9: mostra a dispersão e os outliers. "
-        "Um boxplot largo indica alta variabilidade entre os estudantes do mesmo curso."
     )
 
     if len(df_conc) > 0:
@@ -473,12 +526,13 @@ with col_g10:
             df_conc,
             x="Nome de Curso", y="Anos_Conclusao",
             color="Nome de Curso",
-            color_discrete_map=CORES_CURSO,
+            color_discrete_map=CORES_CURSO_LIGHT,
             points="outliers",
             labels={"Anos_Conclusao": "Anos após o Ingresso", "Nome de Curso": ""},
             category_orders={"Nome de Curso": ordem_box},
         )
         fig_g10.update_layout(showlegend=False, xaxis_tickangle=-30)
+        aplicar_layout_light(fig_g10)
         
         st.plotly_chart(fig_g10, width="stretch")
     else:

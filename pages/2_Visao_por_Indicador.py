@@ -2,41 +2,45 @@
 pages/2_Visao_por_Indicador.py — Visão por indicador.
 
 Gráficos desta página:
-    6  — Barras agrupadas:  indicador selecionado por tipo de curso e ano
-    7  — Barras horizontais: ranking do indicador por curso (último ano)
-    8  — Heatmap:           indicador por Curso × Ano
-    9  — Heatmap:           todos os indicadores por curso (último ano)
+    11 — Barras agrupadas: indicador selecionado por tipo de curso e ano
+    12 — Barras horizontais: Ranking do indicador por curso (último ano)
+    13 — Heatmap: Indicador por Curso × Ano
+    14 — Heatmap: Todos os indicadores por Curso (último ano)
+
 """
 
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
+import pandas as pd
 
 from utils import (
     carregar_dados,
     calcular_indicadores,
+    gerar_mapa_cores,
+    aplicar_layout_light,
+    escala_indicador,
     CAMINHO_DADOS,
-    CORES_INDICADORES,
+    ROTULOS_INDICADORES,
+    PALETA_TIPO_CURSO,
 )
 
 # Configuração da página 
-st.set_page_config(page_title="Visão Por Indicador", page_icon=":bar_chart:", layout="wide")
-st.title(":bar_chart: Visão Por Indicador")
+st.set_page_config(page_title="Visão por Indicador", page_icon=":bar_chart:", layout="wide")
+st.title(":bar_chart: Visão por Indicador")
 st.markdown(
-    "Análise detalhada de cada indicador acadêmico, filtrada por curso, "
-    "tipo de curso e período."
+    "Exibição detalhada dos indicadores acadêmicos por período, tipo de curso e curso. "
+    "Permitie observar quais cursos e tipos de curso mais contribuem para os resultados do campus."
 )
 
 # Carga dos dados
 df_completo = carregar_dados(CAMINHO_DADOS)
 
-# Filtros desta página
+# Filtros
 st.markdown("### Filtros")
-
-col_f1, col_f2, col_f3 = st.columns(3)
+col_f1, col_f2, col_f3, col_f4 = st.columns([1.2, 1.4, 1.8, 1.4])
 
 with col_f1:
-    anos_disponiveis = sorted(df_completo["Ano"].unique())
+    anos_disponiveis = sorted(df_completo["Ano"].dropna().unique())
     periodo = st.slider(
         "Período de análise",
         min_value=int(min(anos_disponiveis)),
@@ -45,7 +49,7 @@ with col_f1:
     )
 
 with col_f2:
-    tipos_disponiveis = sorted(df_completo["Tipo de Curso"].unique())
+    tipos_disponiveis = sorted(df_completo["Tipo de Curso"].dropna().unique())
     tipos_selecionados = st.multiselect(
         "Tipo de Curso",
         options=tipos_disponiveis,
@@ -53,16 +57,16 @@ with col_f2:
     )
 
 with col_f3:
-    # Rótulos para o seletor de indicador e para os gráficos
-    ROTULOS_INDICADORES = {
-        "TC":      "Taxa de Conclusão",
-        "TE":      "Taxa de Evasão",
-        "TR":      "Taxa de Retenção",
-        "IEf":     "Índice de Eficiência",
-        "TPE":     "Taxa de Permanência e Êxito",
-    }
+    cursos_disponiveis = sorted(df_completo["Nome de Curso"].dropna().unique())
+    cursos_selecionados = st.multiselect(
+        "Curso",
+        options=cursos_disponiveis,
+        default=cursos_disponiveis,
+    )
+
+with col_f4:
     indicador = st.selectbox(
-        "Indicador a analisar (gráficos 6 e 8)",
+        "Indicador",
         options=list(ROTULOS_INDICADORES.keys()),
         format_func=lambda x: ROTULOS_INDICADORES[x],
     )
@@ -72,107 +76,155 @@ df = df_completo[
     (df_completo["Ano"] >= periodo[0])
     & (df_completo["Ano"] <= periodo[1])
     & (df_completo["Tipo de Curso"].isin(tipos_selecionados))
+    & (df_completo["Nome de Curso"].isin(cursos_selecionados))
 ].copy()
 
-# Calcula os indicadores nas granularidades necessárias
+if df.empty:
+    st.warning("Não há dados para os filtros selecionados.")
+    st.stop()
+
+# Indicadores nas granularidades necessárias
 ind_ano_curso = calcular_indicadores(df, ["Ano", "Nome de Curso"])
-ind_ano_tipo  = calcular_indicadores(df, ["Ano", "Tipo de Curso"])
+ind_ano_tipo = calcular_indicadores(df, ["Ano", "Tipo de Curso"])
 
-# Identifica o último ano disponível nos dados filtrados
+if ind_ano_curso.empty:
+    st.warning("Não foi possível calcular indicadores para os filtros selecionados.")
+    st.stop()
+
 ultimo_ano = int(ind_ano_curso["Ano"].max())
+cores_tipo = gerar_mapa_cores(ind_ano_tipo["Tipo de Curso"])
 
-# Define a escala de cor conforme o indicador selecionado
-escala_cor = "Reds" if indicador in ["TE", "TR"] else "Blues"
 
 st.markdown("---")
 
-# 6: Indicador por tipo de curso e ano (barras agrupadas)
-st.markdown(f"### 6 - {ROTULOS_INDICADORES[indicador]} por Tipo de Curso e Ano")
+
+# 11 — Indicador por tipo de curso e ano
+st.markdown(f"### 11 — {ROTULOS_INDICADORES[indicador]} por Tipo de Curso e Ano")
 st.markdown(
-    "Barras agrupadas comparando o desempenho entre tipos de curso a cada ano."
+    "Compara a evolução do indicador entre os tipos de curso."
 )
 
-fig_g6 = px.bar(
+fig_g11 = px.bar(
     ind_ano_tipo,
     x="Ano",
     y=indicador,
     color="Tipo de Curso",
     barmode="group",
+    color_discrete_map=cores_tipo,
     text_auto=".1f",
-    labels={indicador: f"{ROTULOS_INDICADORES[indicador]} (%)", "Tipo de Curso": "Tipo de Curso"},
+    labels={
+        indicador: f"{ROTULOS_INDICADORES[indicador]} (%)",
+        "Tipo de Curso": "Tipo de Curso",
+    },
 )
-fig_g6.update_xaxes(tickmode="linear", dtick=1)
-st.plotly_chart(fig_g6, width='stretch')
+fig_g11.update_xaxes(tickmode="linear", dtick=1)
+fig_g11.update_traces(textposition="outside", cliponaxis=False)
+aplicar_layout_light(fig_g11, altura=430)
+st.plotly_chart(fig_g11, width="stretch")
 
-# 7: Ranking do indicador por curso (último ano)
-st.markdown(f"### 7 - Ranking de {ROTULOS_INDICADORES[indicador]} por Curso ({ultimo_ano})")
+
+# 12 — Ranking por curso no último ano filtrado
+st.markdown(f"### 12 — Ranking de {ROTULOS_INDICADORES[indicador]} por Curso ({ultimo_ano})")
 st.markdown(
-    f"Barras horizontais ordenadas pelo valor do indicador **no último ano disponível ({ultimo_ano})**. "
+    "Ordena os cursos pelo valor do indicador no último ano disponível dentro dos filtros. "
 )
 
-# Filtra somente os dados do último ano e ordena para a barra maior ficar no topo
 ranking = (
     ind_ano_curso[ind_ano_curso["Ano"] == ultimo_ano]
-    [["Nome de Curso", indicador]]
+    [["Nome de Curso", indicador, "matr_atendidas"]]
     .sort_values(indicador, ascending=True)
 )
 
-fig_g7 = px.bar(
+fig_g12 = px.bar(
     ranking,
     x=indicador,
     y="Nome de Curso",
     orientation="h",
     color=indicador,
-    color_continuous_scale=escala_cor,
-    text_auto=".1f",
-    labels={indicador: f"{ROTULOS_INDICADORES[indicador]} (%)", "Nome de Curso": ""},
+    color_continuous_scale=escala_indicador(indicador),
+    text=indicador,
+    labels={
+        indicador: f"{ROTULOS_INDICADORES[indicador]} (%)",
+        "Nome de Curso": "",
+    },
+    custom_data=["matr_atendidas"],
 )
-fig_g7.update_layout(coloraxis_showscale=False)
-st.plotly_chart(fig_g7, width='stretch')
+fig_g12.update_traces(
+    texttemplate="%{x:.1f}%",
+    textposition="outside",
+    cliponaxis=False,
+    hovertemplate=(
+        "<b>%{y}</b><br>"
+        f"{ROTULOS_INDICADORES[indicador]}: %{{x:.1f}}%<br>"
+        "Matrículas atendidas: %{customdata[0]}<extra></extra>"
+    ),
+)
+fig_g12.update_layout(coloraxis_showscale=False)
+aplicar_layout_light(fig_g12, altura=max(430, 32 * len(ranking) + 140))
+st.plotly_chart(fig_g12, width="stretch")
 
-# 8: Heatmap do indicador por Curso × Ano
-st.markdown(f"### 8 — Mapa de Calor: {ROTULOS_INDICADORES[indicador]} por Curso e Ano")
+
+# 13 — Heatmap Curso × Ano
+st.markdown(f"### 13 — Mapa de Calor: {ROTULOS_INDICADORES[indicador]} por Curso e Ano")
 st.markdown(
-    "Cada célula mostra o valor do indicador para um curso em um determinado ano. "
+    "Cada célula mostra o valor do indicador para um curso em um ano. Células vazias "
+    "indicam ausência de dado para aquela combinação."
 )
 
-# pivot_table() reorganiza o DataFrame: cursos nas linhas, anos nas colunas
 pivot = ind_ano_curso.pivot_table(
     index="Nome de Curso",
     columns="Ano",
     values=indicador,
-    fill_value=0,
+    aggfunc="mean",
 )
 
-fig_g8 = px.imshow(
+fig_g13 = px.imshow(
     pivot,
     text_auto=".1f",
-    color_continuous_scale=escala_cor,
+    color_continuous_scale=escala_indicador(indicador),
     labels={"color": f"{ROTULOS_INDICADORES[indicador]} (%)"},
     aspect="auto",
 )
-st.plotly_chart(fig_g8, width='stretch')
+fig_g13.update_layout(
+    template="plotly_white",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(color="#263238"),
+    margin=dict(l=20, r=20, t=40, b=40),
+    xaxis_title="Ano",
+    yaxis_title="",
+)
+st.plotly_chart(fig_g13, width="stretch")
 
-# 9: Heatmap de todos os indicadores por curso (último ano)
-st.markdown(f"### 9 — Todos os Indicadores por Curso ({ultimo_ano})")
+
+# 14 — Todos os indicadores por curso no último ano filtrado
+st.markdown(f"### 14 — Todos os Indicadores por Curso ({ultimo_ano})")
 st.markdown(
-    "Visão consolidada de TC, TE, TR, IEf e TPE para todos os cursos "
-    f"no último ano disponível ({ultimo_ano}). "
+    "Apresenta uma visão consolidada dos principais indicadores no último ano filtrado. "
 )
 
 todos_indicadores = ["TC", "TE", "TR", "IEf", "TPE"]
-
-# Seleciona apenas o último ano e usa o nome do curso como índice da tabela
 pivot_todos = (
     ind_ano_curso[ind_ano_curso["Ano"] == ultimo_ano]
     .set_index("Nome de Curso")[todos_indicadores]
+    .sort_index()
 )
+pivot_todos = pivot_todos.rename(columns=ROTULOS_INDICADORES)
 
-fig_g9 = px.imshow(
+fig_g14 = px.imshow(
     pivot_todos,
     text_auto=".1f",
-    color_continuous_scale="Greens",
-    labels={"color": "(%)"},
+    color_continuous_scale="Purples",
+    labels={"color": "Valor (%)"},
     aspect="auto",
 )
-st.plotly_chart(fig_g9, width='stretch')
+fig_g14.update_layout(
+    template="plotly_white",
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(color="#263238"),
+    margin=dict(l=20, r=20, t=40, b=40),
+    xaxis_title="Indicador",
+    yaxis_title="",
+)
+st.plotly_chart(fig_g14, width="stretch")
