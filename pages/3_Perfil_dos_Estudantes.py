@@ -244,6 +244,12 @@ with col_11:
         .reset_index(name="Qtd")
         .sort_values("Qtd", ascending=True)
     )
+    raca_df["Percentual"] = raca_df["Qtd"] / raca_df["Qtd"].sum() * 100
+    raca_df["Texto"] = raca_df.apply(
+        lambda linha: f"{int(linha['Qtd'])} ({linha['Percentual']:.1f}%)",
+        axis=1,
+    )
+
     fig_g16 = px.bar(
         raca_df,
         x="Qtd",
@@ -251,9 +257,11 @@ with col_11:
         orientation="h",
         color="Qtd",
         color_continuous_scale="YlGnBu",
-        text="Qtd",
+        text="Texto",
         labels={"Qtd": "Matrículas", "Cor / Raça": ""},
     )
+    fig_g16.update_traces(textposition="outside", cliponaxis=False)
+    fig_g16.update_xaxes(range=[0, raca_df["Qtd"].max() * 1.25])
     fig_g16.update_layout(coloraxis_showscale=False)
     aplicar_layout_light(fig_g16, altura=430)
     st.plotly_chart(fig_g16, width="stretch")
@@ -270,6 +278,12 @@ with col_12:
         .reindex(rendas_presentes)
         .reset_index(name="Qtd")
     )
+    renda_df["Percentual"] = renda_df["Qtd"] / renda_df["Qtd"].sum() * 100
+    renda_df["Texto"] = renda_df.apply(
+        lambda linha: f"{int(linha['Qtd'])} ({linha['Percentual']:.1f}%)",
+        axis=1,
+    )
+
     fig_g17 = px.bar(
         renda_df.sort_values("Qtd", ascending=True),
         x="Qtd",
@@ -277,9 +291,11 @@ with col_12:
         orientation="h",
         color="Qtd",
         color_continuous_scale="YlGnBu",
-        text="Qtd",
+        text="Texto",
         labels={"Qtd": "Matrículas", "Renda Familiar": "Renda"},
     )
+    fig_g17.update_traces(textposition="outside", cliponaxis=False)
+    fig_g17.update_xaxes(range=[0, renda_df["Qtd"].max() * 1.25])
     fig_g17.update_layout(coloraxis_showscale=False)
     aplicar_layout_light(fig_g17, altura=430)
     st.plotly_chart(fig_g17, width="stretch")
@@ -292,6 +308,12 @@ with col_13:
         .reset_index(name="Qtd")
         .sort_values("Qtd", ascending=False)
     )
+    turno_df["Percentual"] = turno_df["Qtd"] / turno_df["Qtd"].sum() * 100
+    turno_df["Texto"] = turno_df.apply(
+        lambda linha: f"{int(linha['Qtd'])} ({linha['Percentual']:.1f}%)",
+        axis=1,
+    )
+
     cores_turno = gerar_mapa_cores(turno_df["Turno"])
     fig_g18 = px.bar(
         turno_df,
@@ -299,7 +321,7 @@ with col_13:
         y="Qtd",
         color="Turno",
         color_discrete_map=cores_turno,
-        text="Qtd",
+        text="Texto",
         labels={"Qtd": "Matrículas", "Turno": ""},
     )
     fig_g18.update_traces(textposition="outside", cliponaxis=False)
