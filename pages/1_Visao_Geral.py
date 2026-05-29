@@ -9,7 +9,7 @@ Gráficos desta página:
     5 — Barras empilhadas: matrículas por curso e ano
     6 - Barras empilhadas : motivos de saída por ano
     7 - Barras horizontais: Proporção de motivos de evasão por curso (último ano)
-    8 - Barras empilhadas: Conclusões: No Prazo vs. Com Atraso por Curso
+    8 - Barras empilhadas: Conclusões no Prazo e Conclusões com Atraso por Curso
     9 - Barras horizontais: Tempo Mediano de Conclusão por Curso
     10 - Boxplot : Distribuição do Tempo até Conclusão por Curso
 """
@@ -407,8 +407,8 @@ def preparar_concluidos(df_base):
 
 df_conc = preparar_concluidos(df)
 
-# Gráfico 8: Conclusões no prazo vs. com atraso por curso
-st.markdown("### 8 — Conclusões: No Prazo vs. Com Atraso por Curso")
+# Gráfico 8: Conclusões no Prazo e Conclusões com Atraso por Curso
+st.markdown("### 8 — Conclusões no Prazo e Conclusões com Atraso por Curso")
 st.markdown(
     "Volume de concluintes por curso separado em 'Concluída no prazo' e "
     "'Concluída com atraso'."

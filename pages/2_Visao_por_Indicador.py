@@ -165,7 +165,7 @@ st.plotly_chart(fig_g12, width="stretch")
 
 
 # 13 — Heatmap Curso × Ano
-st.markdown(f"### 13 — Mapa de Calor: {ROTULOS_INDICADORES[indicador]} por Curso e Ano")
+st.markdown(f"### 13 —{ROTULOS_INDICADORES[indicador]} por Curso e Ano")
 st.markdown(
     "Cada célula mostra o valor do indicador para um curso em um ano. Células vazias "
     "indicam ausência de dado para aquela combinação."

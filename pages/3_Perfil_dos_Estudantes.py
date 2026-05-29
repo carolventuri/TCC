@@ -390,7 +390,7 @@ st.markdown("---")
 
 # Situação × Perfil Sociodemográfico]
 
-st.markdown(f"## Situação × Perfil Sociodemográfico ({ano_selecionado})")
+st.markdown(f"## 25 — Situação × Perfil Sociodemográfico ({ano_selecionado})")
 st.markdown(
     "Resumo visual das taxas de evasão, retenção e conclusão dentro de cada categoria "
     "sociodemográfica."
@@ -425,6 +425,32 @@ if not consolidado.empty:
         labels={"color": "Taxa (%)"},
         aspect="auto",
     )
+    # --- Separadores entre grupos sociodemográficos ---
+    colunas = list(matriz.columns)  # ex: ["Sexo: Feminino", "Sexo: Masculino", "Turno: ...]
+
+    # Detecta onde muda a variável (parte antes do ":")
+    separadores = []
+    variavel_atual = colunas[0].split(":")[0]
+    for i, col in enumerate(colunas[1:], start=1):
+        variavel_nova = col.split(":")[0]
+        if variavel_nova != variavel_atual:
+            separadores.append(i)          # índice inteiro na grade do imshow
+            variavel_atual = variavel_nova
+
+    # Adiciona uma linha vertical grossa entre cada grupo
+    shapes = []
+    for sep in separadores:
+        shapes.append(dict(
+            type="line",
+            xref="x",
+            yref="paper",          # y de 0 a 1 = toda a altura do gráfico
+            x0=sep - 0.5,
+            x1=sep - 0.5,
+            y0=0,
+            y1=1,
+            line=dict(color="#263238", width=3),
+        ))
+    
     fig_25.update_layout(
         template="plotly_white",
         paper_bgcolor="rgba(0,0,0,0)",
@@ -433,6 +459,7 @@ if not consolidado.empty:
         margin=dict(l=20, r=20, t=40, b=120),
         xaxis_title="Categoria sociodemográfica",
         yaxis_title="Situação",
+        shapes=shapes,
     )
     fig_25.update_xaxes(tickangle=-35)
     st.plotly_chart(fig_25, width="stretch")

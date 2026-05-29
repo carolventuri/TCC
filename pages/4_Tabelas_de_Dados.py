@@ -15,8 +15,8 @@ from utils import (
 )
 
 # Configuração da página
-st.set_page_config(page_title="Tabelas de Indicadores", page_icon="📋", layout="wide")
-st.title("📋 Tabelas de Indicadores")
+st.set_page_config(page_title="Tabelas de Dados", page_icon="📋", layout="wide")
+st.title("📋 Tabelas de Dados e Indicadores")
 st.markdown(
     "Consulte e exporte os indicadores acadêmicos calculados para o IFRS Campus Restinga."
 )
