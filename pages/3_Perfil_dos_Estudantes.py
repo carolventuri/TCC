@@ -8,7 +8,7 @@ Gráficos desta página:
     18 — Distribuição por turno
     19 a 21 — Heatmaps de evasão por perfil
     22 a 24 — Heatmaps de retenção por perfil
-    25 — Visão consolidada: situação × perfil sociodemográfico
+    25 — Visão consolidada: situação × categoria sociodemográfica
 
 """
 
@@ -16,12 +16,14 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-import numpy as np
 
 from utils import (
+    calcular_indicadores,
+    escala_indicador,
     carregar_dados,
     gerar_mapa_cores,
     aplicar_layout_light,
+    ROTULOS_INDICADORES,
     CAMINHO_DADOS,
     
 )
@@ -49,77 +51,53 @@ PALETA_CATEGORIAS = [
 ]
 
 
-def taxa_situacao(df_base, col_y, col_x, situacao, ordem_y=None, ordem_x=None, n_minimo=1):
-    """
-    Calcula taxa (%) de evasão ou retenção por cruzamento sociodemográfico.
+def pivot_indicador_perfil(
+    df_base,
+    col_y,
+    col_x,
+    indicador,
+    ordem_y=None,
+    ordem_x=None,
+    n_minimo=1,
+):
+    ind = calcular_indicadores(df_base, [col_y, col_x])
 
-    A taxa é calculada como:
-        N da situação no cruzamento / total de matrículas distintas no cruzamento * 100
+    ind.loc[ind["matr_atendidas"] < n_minimo, indicador] = pd.NA
 
-    Células com total menor que n_minimo são convertidas para NaN para evitar interpretações
-    instáveis com denominadores muito pequenos.
-    """
-    if situacao == "Evasão":
-        mask = df_base["Categoria da Situação"] == "Evadidos"
-    elif situacao == "Retenção":
-        mask = df_base["Situação de Matrícula"] == "Retido"
-    elif situacao == "Conclusão":
-        mask = df_base["Categoria da Situação"] == "Concluintes"
-    else:
-        raise ValueError("Situação deve ser Evasão, Retenção ou Conclusão.")
-
-    total = (
-        df_base.groupby([col_y, col_x])["Código da Matricula"]
-        .nunique()
-        .reset_index(name="Total")
+    pivot = ind.pivot_table(
+        index=col_y,
+        columns=col_x,
+        values=indicador,
+        aggfunc="mean",
     )
-
-    contagem = (
-        df_base[mask]
-        .groupby([col_y, col_x])["Código da Matricula"]
-        .nunique()
-        .reset_index(name="N")
-    )
-
-    merged = total.merge(contagem, on=[col_y, col_x], how="left")
-    merged["N"] = merged["N"].fillna(0)
-    merged["Taxa (%)"] = (merged["N"] / merged["Total"] * 100).round(1)
-    merged.loc[merged["Total"] < n_minimo, "Taxa (%)"] = np.nan
-
-    pivot_taxa = merged.pivot_table(index=col_y, columns=col_x, values="Taxa (%)", aggfunc="mean")
-    pivot_total = merged.pivot_table(index=col_y, columns=col_x, values="Total", aggfunc="sum")
 
     if ordem_y:
-        ordem_y_presentes = [c for c in ordem_y if c in pivot_taxa.index]
-        pivot_taxa = pivot_taxa.reindex(ordem_y_presentes)
-        pivot_total = pivot_total.reindex(ordem_y_presentes)
+        ordem_y_presentes = [c for c in ordem_y if c in pivot.index]
+        pivot = pivot.reindex(ordem_y_presentes)
+
     if ordem_x:
-        ordem_x_presentes = [c for c in ordem_x if c in pivot_taxa.columns]
-        pivot_taxa = pivot_taxa[ordem_x_presentes]
-        pivot_total = pivot_total[ordem_x_presentes]
+        ordem_x_presentes = [c for c in ordem_x if c in pivot.columns]
+        pivot = pivot[ordem_x_presentes]
 
-    return pivot_taxa, pivot_total
+    return pivot
 
 
-def plot_heatmap_taxa(pivot, titulo_cor, escala, eixo_x, eixo_y):
+def plot_heatmap_perfil(pivot, indicador, eixo_x, eixo_y):
     fig = px.imshow(
         pivot,
         text_auto=".1f",
-        color_continuous_scale=escala,
-        labels={"color": titulo_cor},
+        color_continuous_scale=escala_indicador(indicador),
+        labels={"color": f"{ROTULOS_INDICADORES[indicador]} (%)"},
         aspect="auto",
     )
+    aplicar_layout_light(fig)
     fig.update_layout(
-        template="plotly_white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#263238"),
-        margin=dict(l=20, r=20, t=40, b=40),
         xaxis_title=eixo_x,
         yaxis_title=eixo_y,
-        coloraxis_colorbar=dict(title=titulo_cor),
+        coloraxis_colorbar=dict(title=f"{ROTULOS_INDICADORES[indicador]} (%)"),
     )
     return fig
+
 
 
 # Configuração da página 
@@ -178,10 +156,6 @@ df = df_completo[
     & (df_completo["Tipo de Curso"].isin(tipos_selecionados))
     & (df_completo["Nome de Curso"].isin(cursos_selecionados))
 ].copy()
-
-if df.empty:
-    st.warning("Não há dados para os filtros selecionados.")
-    st.stop()
 
 st.markdown("---")
 
@@ -335,26 +309,26 @@ st.markdown("---")
 st.markdown(f"## Taxa de Evasão por Perfil ({ano_selecionado})")
 st.markdown(
     "Cada célula mostra a taxa de evasão dentro do cruzamento analisado. "
-    f"Células com menos de **{n_minimo}** matrículas ficam em branco para reduzir ruído estatístico."
+    f"Células com menos de **{n_minimo}** matrículas ficam em branco."
 )
 
 st.markdown("### 19 — Evasão: Faixa Etária × Renda Familiar")
-pivot_g19, _ = taxa_situacao(df, "Faixa Etária", "Renda Familiar", "Evasão", ORDEM_ETARIA, ORDEM_RENDA, n_minimo)
-fig_g19 = plot_heatmap_taxa(pivot_g19, "Evasão (%)", "OrRd", "Renda Familiar", "Faixa Etária")
+pivot_g19 = pivot_indicador_perfil(df, "Faixa Etária", "Renda Familiar", "TE", ORDEM_ETARIA, ORDEM_RENDA, n_minimo)
+fig_g19 = plot_heatmap_perfil(pivot_g19, "TE", "Renda Familiar", "Faixa Etária")
 st.plotly_chart(fig_g19, width="stretch")
 
 col_15, col_16 = st.columns(2)
 
 with col_15:
     st.markdown("### 20 — Evasão: Sexo × Turno")
-    pivot_g20, _ = taxa_situacao(df, "Sexo", "Turno", "Evasão", n_minimo=n_minimo)
-    fig_g20 = plot_heatmap_taxa(pivot_g20, "Evasão (%)", "OrRd", "Turno", "Sexo")
+    pivot_g20 = pivot_indicador_perfil(df, "Sexo", "Turno", "TE", n_minimo=n_minimo)
+    fig_g20 = plot_heatmap_perfil(pivot_g20, "TE", "Turno", "Sexo")
     st.plotly_chart(fig_g20, width="stretch")
 
 with col_16:
     st.markdown("### 21 — Evasão: Cor/Raça × Renda Familiar")
-    pivot_g21, _ = taxa_situacao(df, "Cor / Raça", "Renda Familiar", "Evasão", ordem_x=ORDEM_RENDA, n_minimo=n_minimo)
-    fig_g21 = plot_heatmap_taxa(pivot_g21, "Evasão (%)", "OrRd", "Renda Familiar", "Cor/Raça")
+    pivot_g21 = pivot_indicador_perfil(df, "Cor / Raça", "Renda Familiar", "TE", ordem_x=ORDEM_RENDA, n_minimo=n_minimo)
+    fig_g21 = plot_heatmap_perfil(pivot_g21, "TE", "Renda Familiar", "Cor/Raça")
     st.plotly_chart(fig_g21, width="stretch")
 
 st.markdown("---")
@@ -363,61 +337,64 @@ st.markdown("---")
 
 st.markdown(f"## Taxa de Retenção por Perfil ({ano_selecionado})")
 st.markdown(
-    "A retenção considera matrículas classificadas como retidas, isto é, ativas após "
+    "A retenção considera matrículas classificadas como retidas, isto é, em curso após "
     "o prazo previsto de conclusão."
 )
 
 st.markdown("### 22 — Retenção: Faixa Etária × Renda Familiar")
-pivot_g22, _ = taxa_situacao(df, "Faixa Etária", "Renda Familiar", "Retenção", ORDEM_ETARIA, ORDEM_RENDA, n_minimo)
-fig_g22 = plot_heatmap_taxa(pivot_g22, "Retenção (%)", "YlOrBr", "Renda Familiar", "Faixa Etária")
+pivot_g22 = pivot_indicador_perfil(df, "Faixa Etária", "Renda Familiar", "TR", ORDEM_ETARIA, ORDEM_RENDA, n_minimo)
+fig_g22 = plot_heatmap_perfil(pivot_g22, "TR", "Renda Familiar", "Faixa Etária")
 st.plotly_chart(fig_g22, width="stretch")
 
 col_18, col_19 = st.columns(2)
 
 with col_18:
     st.markdown("### 23 — Retenção: Sexo × Turno")
-    pivot_g23, _ = taxa_situacao(df, "Sexo", "Turno", "Retenção", n_minimo=n_minimo)
-    fig_g23 = plot_heatmap_taxa(pivot_g23, "Retenção (%)", "YlOrBr", "Turno", "Sexo")
+    pivot_g23 = pivot_indicador_perfil(df, "Sexo", "Turno", "TR", n_minimo=n_minimo)
+    fig_g23 = plot_heatmap_perfil(pivot_g23, "TR", "Turno", "Sexo")
     st.plotly_chart(fig_g23, width="stretch")
 
 with col_19:
     st.markdown("### 24 — Retenção: Cor/Raça × Renda Familiar")
-    pivot_g24, _ = taxa_situacao(df, "Cor / Raça", "Renda Familiar", "Retenção", ordem_x=ORDEM_RENDA, n_minimo=n_minimo)
-    fig_g24 = plot_heatmap_taxa(pivot_g24, "Retenção (%)", "YlOrBr", "Renda Familiar", "Cor/Raça")
+    pivot_g24 = pivot_indicador_perfil(df, "Cor / Raça", "Renda Familiar", "TR", ordem_x=ORDEM_RENDA, n_minimo=n_minimo)
+    fig_g24 = plot_heatmap_perfil(pivot_g24, "TR", "Renda Familiar", "Cor/Raça")
     st.plotly_chart(fig_g24, width="stretch")
 
 st.markdown("---")
 
 # Situação × Perfil Sociodemográfico]
 
-st.markdown(f"## 25 — Situação × Perfil Sociodemográfico ({ano_selecionado})")
+st.markdown(f"## 25 — Situação × Categoria Sociodemográfica ({ano_selecionado})")
 st.markdown(
     "Resumo visual das taxas de evasão, retenção e conclusão dentro de cada categoria "
     "sociodemográfica."
 )
 
-situacoes = {
-    "Evasão": df["Categoria da Situação"] == "Evadidos",
-    "Retenção": df["Situação de Matrícula"] == "Retido",
-    "Conclusão": df["Categoria da Situação"] == "Concluintes",
-}
-
 variaveis = ["Sexo", "Turno", "Renda Familiar", "Faixa Etária", "Cor / Raça"]
+indicadores_situacao = {"Evasão": "TE", "Retenção": "TR", "Conclusão": "TC"}
+
 linhas = []
 for variavel in variaveis:
-    total_por_cat = df.groupby(variavel)["Código da Matricula"].nunique()
-    for categoria, total in total_por_cat.items():
-        if pd.isna(categoria) or total < n_minimo:
+    ind_variavel = calcular_indicadores(df, [variavel])
+    ind_variavel = ind_variavel[ind_variavel["matr_atendidas"] >= n_minimo]
+
+    for _, linha_ind in ind_variavel.iterrows():
+        categoria = linha_ind[variavel]
+
+        if pd.isna(categoria):
             continue
-        linha = {"Perfil": f"{variavel}: {categoria}", "Total": total}
-        for nome_situacao, mask in situacoes.items():
-            n = df[mask & (df[variavel] == categoria)]["Código da Matricula"].nunique()
-            linha[nome_situacao] = round(n / total * 100, 1) if total else np.nan
+
+        linha = {"Perfil": f"{variavel}: {categoria}"}
+        for rotulo, indicador_coluna in indicadores_situacao.items():
+            linha[rotulo] = round(linha_ind[indicador_coluna], 1)
+
         linhas.append(linha)
 
 consolidado = pd.DataFrame(linhas)
+
 if not consolidado.empty:
-    matriz = consolidado.set_index("Perfil")[["Evasão", "Retenção", "Conclusão"]].T
+    matriz = consolidado.set_index("Perfil")[list(indicadores_situacao.keys())].T
+
     fig_25 = px.imshow(
         matriz,
         text_auto=".1f",
@@ -425,37 +402,34 @@ if not consolidado.empty:
         labels={"color": "Taxa (%)"},
         aspect="auto",
     )
-    # --- Separadores entre grupos sociodemográficos ---
-    colunas = list(matriz.columns)  # ex: ["Sexo: Feminino", "Sexo: Masculino", "Turno: ...]
 
-    # Detecta onde muda a variável (parte antes do ":")
+    colunas = list(matriz.columns)
     separadores = []
     variavel_atual = colunas[0].split(":")[0]
+
     for i, col in enumerate(colunas[1:], start=1):
         variavel_nova = col.split(":")[0]
         if variavel_nova != variavel_atual:
-            separadores.append(i)          # índice inteiro na grade do imshow
+            separadores.append(i)
             variavel_atual = variavel_nova
 
-    # Adiciona uma linha vertical grossa entre cada grupo
-    shapes = []
-    for sep in separadores:
-        shapes.append(dict(
+    shapes = [
+        dict(
             type="line",
             xref="x",
-            yref="paper",          # y de 0 a 1 = toda a altura do gráfico
+            yref="paper",
             x0=sep - 0.5,
             x1=sep - 0.5,
             y0=0,
             y1=1,
             line=dict(color="#263238", width=3),
-        ))
-    
+        )
+        for sep in separadores
+    ]
+
+    aplicar_layout_light(fig_25)
+
     fig_25.update_layout(
-        template="plotly_white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#263238"),
         margin=dict(l=20, r=20, t=40, b=120),
         xaxis_title="Categoria sociodemográfica",
         yaxis_title="Situação",

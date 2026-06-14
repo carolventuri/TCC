@@ -35,6 +35,7 @@ from utils import (
     COR_TEMPO_MEDIANO,
     CORES_MATRICULAS_ATIVAS_LIGHT,
     CORES_FLUXO_LIGHT,
+    ROTULOS_INDICADORES,
 )
 
  
@@ -103,14 +104,6 @@ st.markdown(
     "Mostra como os indicadores de permanência e êxito evoluíram ao longo do tempo. "
 )
 
-mapeamento_indicadores = {
-    "TC": "Taxa de Conclusão",
-    "TE": "Taxa de Evasão",
-    "TR": "Taxa de Retenção",
-    "TPE": "Taxa de Permanência e Êxito",
-    "IEf": "Índice de Eficiência",
-}
-
 # melt() transforma o DataFrame de formato largo (uma coluna por indicador) para formato longo 
 ind_longo = ind_ano.melt(
     id_vars="Ano",
@@ -130,10 +123,10 @@ fig_g1 = px.line(
 )
 # troca apenas o nome exibido na legenda
 for trace in fig_g1.data:
-    trace.name = mapeamento_indicadores.get(trace.name, trace.name)
+    trace.name = ROTULOS_INDICADORES.get(trace.name, trace.name)
     trace.hovertemplate = trace.hovertemplate.replace(
         trace.legendgroup,
-        mapeamento_indicadores.get(trace.legendgroup, trace.legendgroup)
+        ROTULOS_INDICADORES.get(trace.legendgroup, trace.legendgroup)
     )
 
 fig_g1.update_xaxes(tickmode="linear", dtick=1)
@@ -203,7 +196,7 @@ with col_g3:
 with col_g4:
     st.markdown("### 4 — Ingressantes e Concluintes por Ano")
     st.markdown(
-        "Compara quantos alunos entram (Ingressantes) vs. quantos saem formados "
+        "Compara quantos alunos entram (Ingressantes) e quantos saem formados "
         "(Concluintes) a cada ano"
     )
  
@@ -260,9 +253,6 @@ fig_g5.update_xaxes(tickmode="linear", dtick=1)
 aplicar_layout_light(fig_g5, legenda_y=-0.25)
 st.plotly_chart(fig_g5, width='stretch')
 
-import plotly.graph_objects as go
-import numpy as np
-
 st.markdown("---")
 
 
@@ -273,23 +263,23 @@ st.markdown("## Evasão")
 col_g6, col_g7 = st.columns(2)
 
 with col_g6:
-    # Gráfico 6: Motivos de saída por ano
-    st.markdown("### 6 — Motivos de Saída por Ano")
+    # Gráfico 6: Motivos de Evasão por ano
+    st.markdown("### 6 — Motivos de Evasão por Ano")
     st.markdown(
-        "Evolução do volume de cada tipo de saída ao longo da série histórica. "
+        "Evolução do volume de cada tipo de evasão ao longo da série histórica. "
     )
 
-    situacoes_saida = ["Abandono", "Desligada", "Transf. externa", "Transf. interna"]
+    situacoes_evasao = ["Abandono", "Desligada", "Transf. externa", "Transf. interna"]
 
-    df_saidas = (
-        df[df["Situação de Matrícula"].isin(situacoes_saida)]
+    df_evasoes = (
+        df[df["Situação de Matrícula"].isin(situacoes_evasao)]
         .groupby(["Ano", "Situação de Matrícula"])["Código da Matricula"]
         .count()
         .reset_index(name="Qtd")
     )
 
     fig_g6 = px.bar(
-        df_saidas,
+        df_evasoes,
         x="Ano", y="Qtd",
         color="Situação de Matrícula",
         barmode="stack",
@@ -303,13 +293,13 @@ with col_g6:
 
 with col_g7:
     # Gráfico 7: Proporção de motivos de evasão por curso (último ano)
-    ultimo_ano = int(df_completo["Ano"].max())
+    ultimo_ano = int(periodo[1]) # último período selecionado no slider
     st.markdown(f"### 7 — Motivos de Evasão por Curso ({ultimo_ano})")
     st.markdown(
         f"Volume de cada motivo de evasão por curso em **{ultimo_ano}**. "
     )
 
-    motivos_ev = ["Abandono", "Desligada", "Transf. externa"]
+    motivos_ev = ["Abandono", "Desligada", "Transf. externa", "Transf. interna"]
 
     df_ev_ano = df_completo[
         (df_completo["Ano"] == ultimo_ano)
@@ -345,148 +335,116 @@ with col_g7:
 
 st.markdown("---")
 
-
-# SEÇÃO — CONCLUSÃO
-
 st.markdown("## Conclusão")
 
-# Prepara df_concluidos (necessário para gráficos 9 e 10)
-def preparar_concluidos(df_base):
-    """
-    Prepara uma base única de concluintes para os gráficos de tempo de conclusão.
+situacoes_conclusao = ["Concluída no prazo", "Concluída com atraso"]
 
-    Regras adotadas:
-    1. Usa a base já filtrada na página (período, tipo de curso e curso).
-    2. Considera apenas situações finais de conclusão:
-       - Concluída no prazo
-       - Concluída com atraso
-    3. Remove duplicidades por matrícula, preservando a última ocorrência registrada.
-       Isso evita contar duas vezes o mesmo estudante se houver linhas repetidas.
-    4. Calcula o tempo de conclusão em anos:
-       (Mês de Ocorrência da Situação - Data de Início do Ciclo) / 365,25.
-    """
-    dc = df_base[
-        df_base["Situação de Matrícula"].isin(["Concluída no prazo", "Concluída com atraso"])
-    ].copy()
+df_conc = df[
+    df["Situação de Matrícula"].isin(situacoes_conclusao)
+].copy()
 
-    dc["Data de Inicio do Ciclo"] = pd.to_datetime(
-        dc["Data de Inicio do Ciclo"], errors="coerce"
-    )
-    dc["Mês De Ocorrência da Situação"] = pd.to_datetime(
-        dc["Mês De Ocorrência da Situação"], errors="coerce"
-    )
+df_conc["Anos_Conclusao"] = (
+    (df_conc["Mês De Ocorrência da Situação"] - df_conc["Data de Inicio do Ciclo"])
+    .dt.days / 365.25
+).round(2)
 
-    dc = dc.dropna(subset=[
-        "Código da Matricula",
-        "Nome de Curso",
-        "Tipo de Curso",
-        "Data de Inicio do Ciclo",
-        "Mês De Ocorrência da Situação",
-    ])
-
-    # Se houver mais de uma linha para a mesma matrícula, fica a ocorrência final.
-    dc = dc.sort_values("Mês De Ocorrência da Situação")
-    dc = dc.drop_duplicates(subset=["Código da Matricula"], keep="last")
-
-    dc["Anos_Conclusao"] = (
-        (dc["Mês De Ocorrência da Situação"] - dc["Data de Inicio do Ciclo"])
-        .dt.days / 365.25
-    )
-
-    dc["Ano_Ingresso"] = dc["Data de Inicio do Ciclo"].dt.year
-    dc["Ano_Conclusao"] = dc["Mês De Ocorrência da Situação"].dt.year
-
-    dc = dc[
-        (dc["Anos_Conclusao"] > 0)
-        & (dc["Anos_Conclusao"] < 15)
-    ].copy()
-
-    dc["Anos_Conclusao"] = dc["Anos_Conclusao"].round(2)
-    return dc
-
-
-df_conc = preparar_concluidos(df)
+df_conc = df_conc[
+    (df_conc["Anos_Conclusao"] > 0)
+    & (df_conc["Anos_Conclusao"] < 15)
+]
 
 # Gráfico 8: Conclusões no Prazo e Conclusões com Atraso por Curso
+
 st.markdown("### 8 — Conclusões no Prazo e Conclusões com Atraso por Curso")
 st.markdown(
     "Volume de concluintes por curso separado em 'Concluída no prazo' e "
     "'Concluída com atraso'."
 )
 
-# Usa contagem distinta de matrículas para evitar duplicidades.
 conc_prazo = (
-    df[
-        df["Situação de Matrícula"].isin(["Concluída no prazo", "Concluída com atraso"])
-    ]
-    .groupby(["Nome de Curso", "Situação de Matrícula"], as_index=False)["Código da Matricula"]
-    .nunique()
-    .rename(columns={"Código da Matricula": "Qtd"})
+    df_conc
+    .value_counts(["Nome de Curso", "Situação de Matrícula"])
+    .reset_index(name="Qtd")
 )
 
 ordem_conclusao = (
-    conc_prazo.groupby("Nome de Curso")["Qtd"]
+    conc_prazo
+    .groupby("Nome de Curso")["Qtd"]
     .sum()
     .sort_values(ascending=False)
-    .index.tolist()
+    .index
+    .tolist()
 )
 
 fig_g8 = px.bar(
     conc_prazo,
-    x="Nome de Curso", y="Qtd",
+    x="Nome de Curso",
+    y="Qtd",
     color="Situação de Matrícula",
     barmode="stack",
     color_discrete_map=CORES_CONCLUSAO_LIGHT,
-    labels={"Qtd": "Concluintes", "Nome de Curso": "", "Situação de Matrícula": "Situação"},
+    labels={
+        "Qtd": "Concluintes",
+        "Nome de Curso": "",
+        "Situação de Matrícula": "Situação"
+    },
     text_auto=True,
     category_orders={"Nome de Curso": ordem_conclusao},
 )
+
 fig_g8.update_layout(xaxis_tickangle=-30)
 aplicar_layout_light(fig_g8, legenda_y=-0.5)
 st.plotly_chart(fig_g8, width="stretch")
 
+
 # Gráficos 9 e 10 lado a lado
+
 col_g9, col_g10 = st.columns(2)
 
 with col_g9:
-    # Gráfico 9: Tempo mediano de conclusão por curso 
     st.markdown("### 9 — Tempo Mediano de Conclusão por Curso")
     st.markdown(
-        "Mediana de anos entre o ingresso e a conclusão do curso. "
+        "Mediana de anos entre o ingresso e a conclusão do curso."
     )
 
     with st.expander("Como o tempo mediano de conclusão foi calculado"):
         st.markdown(
             """
-            **Base usada:** base filtrada da página: período, tipo de curso e curso.  
-            **Quem entra no cálculo:** apenas matrículas com situação **Concluída no prazo** ou **Concluída com atraso**.  
-            **Unidade de contagem:** matrícula distinta (`Código da Matricula`), para evitar duplicidade caso a mesma matrícula apareça mais de uma vez.  
-            **Tempo individual de conclusão:** diferença entre `Mês De Ocorrência da Situação` e `Data de Inicio do Ciclo`, dividida por **365,25**.  
-            **Mediana por curso:** depois de calcular o tempo individual de cada concluinte, a mediana é calculada por curso. Assim, se um curso tiver 5 concluintes, o valor exibido é o tempo central; se tiver 4, é a média dos dois tempos centrais.  
-            **Filtros de consistência:** foram removidos registros sem datas válidas, tempos negativos/zero e tempos iguais ou superiores a 15 anos.
+            **Base usada:** base filtrada da página: período, tipo de curso e curso, matrículas com situação **Concluída no prazo** ou **Concluída com atraso**.  
+            **Tempo individual de conclusão:** diferença entre **Mês De Ocorrência da Situação** e **Data de Inicio do Ciclo**, dividida por **365,25**.  
+            **Mediana por curso:** depois de calcular o tempo individual de cada concluinte, a mediana é calculada por curso.  
+            **Filtro de consistência:** foram mantidos tempos maiores que zero e menores que 15 anos.
             """
         )
 
     if len(df_conc) > 0:
         tempo_mediano = (
-            df_conc.groupby(["Nome de Curso", "Tipo de Curso"])["Anos_Conclusao"]
-            .agg(Mediana="median", Media="mean", N="count")
-            .reset_index()
+            df_conc
+            .groupby(["Nome de Curso", "Tipo de Curso"], as_index=False)
+            .agg(
+                Mediana=("Anos_Conclusao", "median"),
+                Media=("Anos_Conclusao", "mean"),
+                N=("Anos_Conclusao", "count")
+            )
             .round(2)
-            .sort_values("Mediana", ascending=True)
+            .sort_values("Mediana")
         )
-
 
         fig_g9 = px.bar(
             tempo_mediano,
-            x="Mediana", y="Nome de Curso",
+            x="Mediana",
+            y="Nome de Curso",
             orientation="h",
             text="Mediana",
-            labels={"Mediana": "Mediana (anos)", "Nome de Curso": ""},
+            labels={
+                "Mediana": "Mediana (anos)",
+                "Nome de Curso": ""
+            },
             custom_data=["Media", "N", "Tipo de Curso"],
         )
-        fig_g9.update_traces(marker_color=COR_TEMPO_MEDIANO)
+
         fig_g9.update_traces(
+            marker_color=COR_TEMPO_MEDIANO,
             texttemplate="%{x:.2f}",
             textposition="outside",
             hovertemplate=(
@@ -502,38 +460,50 @@ with col_g9:
             showlegend=False,
             xaxis=dict(range=[0, tempo_mediano["Mediana"].max() * 1.2]),
         )
+
         aplicar_layout_light(fig_g9)
         st.plotly_chart(fig_g9, width="stretch")
+
     else:
         st.info("Sem dados de concluídos para o filtro selecionado.")
 
 with col_g10:
-    # Gráfico 10: Boxplot do tempo até conclusão por curso
     st.markdown("### 10 — Distribuição do Tempo até Conclusão por Curso")
     st.markdown(
-        "Boxplot complementa o gráfico 9: mostra a dispersão e os outliers. "
+        "Boxplot complementa o gráfico 9: mostra a dispersão e os outliers."
     )
 
     if len(df_conc) > 0:
         ordem_box = (
-            df_conc.groupby("Nome de Curso")["Anos_Conclusao"]
+            df_conc
+            .groupby("Nome de Curso")["Anos_Conclusao"]
             .median()
             .sort_values(ascending=False)
-            .index.tolist()
+            .index
+            .tolist()
         )
 
         fig_g10 = px.box(
             df_conc,
-            x="Nome de Curso", y="Anos_Conclusao",
+            x="Nome de Curso",
+            y="Anos_Conclusao",
             color="Nome de Curso",
             color_discrete_map=CORES_CURSO_LIGHT,
             points="outliers",
-            labels={"Anos_Conclusao": "Anos após o Ingresso", "Nome de Curso": ""},
+            labels={
+                "Anos_Conclusao": "Anos após o Ingresso",
+                "Nome de Curso": ""
+            },
             category_orders={"Nome de Curso": ordem_box},
         )
-        fig_g10.update_layout(showlegend=False, xaxis_tickangle=-30)
+
+        fig_g10.update_layout(
+            showlegend=False,
+            xaxis_tickangle=-30
+        )
+
         aplicar_layout_light(fig_g10)
-        
         st.plotly_chart(fig_g10, width="stretch")
+
     else:
         st.info("Sem dados de concluídos para o filtro selecionado.")

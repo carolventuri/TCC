@@ -65,13 +65,11 @@ st.markdown(
     """
     | Sigla | Nome completo | O que mede |
     |-------|--------------|------------|
-    | **TC** | Taxa de Conclusão | % de concluintes em relação às matrículas atendidas |
-    | **TE** | Taxa de Evasão | % de evadidos em relação às matrículas atendidas |
-    | **TR** | Taxa de Retenção | % de alunos além do prazo previsto em relação às matrículas atendidas |
-    | **IEf** | Índice de Eficiência | % de concluintes entre os que finalizaram o vínculo |
+    | **TC** | Taxa de Conclusão | Porcentagem de concluintes em relação às matrículas atendidas |
+    | **TE** | Taxa de Evasão | Porcentagem de evadidos em relação às matrículas atendidas |
+    | **TR** | Taxa de Retenção | Porcentagem de alunos além do prazo previsto em relação às matrículas atendidas |
+    | **IEf** | Índice de Eficiência | Porcentagem de concluintes entre os que finalizaram o vínculo |
     | **TPE** | Taxa de Permanência e Êxito | TC + Taxa de Matrícula Continuada Regular |
-    | **MREG** | Matrículas Ativas Regulares | matrículas ativas e dentro do prazo previsto de conclusão do curso |
-    | **MRET** | Matrículas Ativas Retidas | matrículas ativas após a data prevista para conclusão do curso |
     """
 )
 

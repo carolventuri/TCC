@@ -78,7 +78,7 @@ PALETA_QUALITATIVA_LIGHT = [
 ]
 
 CORES_SITUACAO_LIGHT = {
-    "Abandono": "#D55E00",              # laranja queimado
+    "Abandono": "#D55E00",             # laranja queimado
     "Desligada": "#7B1FA2",            # roxo
     "Transf. externa": "#009E73",      # verde azulado
     "Transf. interna": "#E69F00",      # âmbar

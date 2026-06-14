@@ -1,5 +1,5 @@
 """
-pages/5_Tabelas.py — Tabelas de indicadores para consulta e exportação.
+pages/5_Tabelas_de_Dados.py — Tabelas de dados e indicadores para consulta e exportação.
 
 Permite visualizar os indicadores calculados em diferentes granularidades
 e baixar os resultados em formato CSV.

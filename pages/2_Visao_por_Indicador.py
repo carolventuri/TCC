@@ -79,24 +79,16 @@ df = df_completo[
     & (df_completo["Nome de Curso"].isin(cursos_selecionados))
 ].copy()
 
-if df.empty:
-    st.warning("Não há dados para os filtros selecionados.")
-    st.stop()
-
 # Indicadores nas granularidades necessárias
 ind_ano_curso = calcular_indicadores(df, ["Ano", "Nome de Curso"])
 ind_ano_tipo = calcular_indicadores(df, ["Ano", "Tipo de Curso"])
 
-if ind_ano_curso.empty:
-    st.warning("Não foi possível calcular indicadores para os filtros selecionados.")
-    st.stop()
 
 ultimo_ano = int(ind_ano_curso["Ano"].max())
 cores_tipo = gerar_mapa_cores(ind_ano_tipo["Tipo de Curso"])
 
 
 st.markdown("---")
-
 
 # 11 — Indicador por tipo de curso e ano
 st.markdown(f"### 11 — {ROTULOS_INDICADORES[indicador]} por Tipo de Curso e Ano")
@@ -112,14 +104,11 @@ fig_g11 = px.bar(
     barmode="group",
     color_discrete_map=cores_tipo,
     text_auto=".1f",
-    labels={
-        indicador: f"{ROTULOS_INDICADORES[indicador]} (%)",
-        "Tipo de Curso": "Tipo de Curso",
-    },
+    labels={indicador: f"{ROTULOS_INDICADORES[indicador]} (%)", "Tipo de Curso": "Tipo de Curso"},
 )
 fig_g11.update_xaxes(tickmode="linear", dtick=1)
 fig_g11.update_traces(textposition="outside", cliponaxis=False)
-aplicar_layout_light(fig_g11, altura=430)
+aplicar_layout_light(fig_g11)
 st.plotly_chart(fig_g11, width="stretch")
 
 
@@ -130,8 +119,7 @@ st.markdown(
 )
 
 ranking = (
-    ind_ano_curso[ind_ano_curso["Ano"] == ultimo_ano]
-    [["Nome de Curso", indicador, "matr_atendidas"]]
+    ind_ano_curso[ind_ano_curso["Ano"] == ultimo_ano][["Nome de Curso", indicador, "matr_atendidas"]]
     .sort_values(indicador, ascending=True)
 )
 
@@ -182,18 +170,12 @@ fig_g13 = px.imshow(
     pivot,
     text_auto=".1f",
     color_continuous_scale=escala_indicador(indicador),
-    labels={"color": f"{ROTULOS_INDICADORES[indicador]} (%)"},
+    labels=dict(x='Ano', y='', color=f'{ROTULOS_INDICADORES[indicador]} (%)'),
     aspect="auto",
 )
-fig_g13.update_layout(
-    template="plotly_white",
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#263238"),
-    margin=dict(l=20, r=20, t=40, b=40),
-    xaxis_title="Ano",
-    yaxis_title="",
-)
+
+aplicar_layout_light(fig_g13)
+fig_g13.update_xaxes(tickmode='linear')
 st.plotly_chart(fig_g13, width="stretch")
 
 
@@ -203,28 +185,16 @@ st.markdown(
     "Apresenta uma visão consolidada dos principais indicadores no último ano filtrado. "
 )
 
-todos_indicadores = ["TC", "TE", "TR", "IEf", "TPE"]
-pivot_todos = (
-    ind_ano_curso[ind_ano_curso["Ano"] == ultimo_ano]
-    .set_index("Nome de Curso")[todos_indicadores]
-    .sort_index()
-)
-pivot_todos = pivot_todos.rename(columns=ROTULOS_INDICADORES)
+indicadores = ['TC', 'TE', 'TR', 'IEf', 'TPE']
+base_ultimo = ind_ano_curso[ind_ano_curso['Ano'] == ultimo_ano].copy()
+heat_ind = base_ultimo.set_index('Nome de Curso')[indicadores].sort_index()
+heat_ind = heat_ind.rename(columns=ROTULOS_INDICADORES)
 
 fig_g14 = px.imshow(
-    pivot_todos,
-    text_auto=".1f",
-    color_continuous_scale="Purples",
-    labels={"color": "Valor (%)"},
-    aspect="auto",
+    heat_ind, text_auto='.1f', aspect='auto', color_continuous_scale='Purples',
+    labels=dict(x='Indicador', y='', color='Valor (%)'),
 )
-fig_g14.update_layout(
-    template="plotly_white",
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
-    font=dict(color="#263238"),
-    margin=dict(l=20, r=20, t=40, b=40),
-    xaxis_title="Indicador",
-    yaxis_title="",
-)
+
+aplicar_layout_light(fig_g14)
+fig_g14.update_xaxes(tickmode='linear')
 st.plotly_chart(fig_g14, width="stretch")
