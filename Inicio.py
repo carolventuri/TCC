@@ -22,7 +22,7 @@ st.markdown(
     #### Bem-vindo(a) ao painel interativo de indicadores acadêmicos do **IFRS Campus Restinga**!
 
     Os dados são provenientes dos microdados de matrículas da Plataforma Nilo Peçanha (PNP),
-    abrangendo o período de **2017 a 2024**, e os indicadores são calculados conforme as
+    abrangendo o período de **2017 a 2025**, e os indicadores são calculados conforme as
     definições do Plano Estratégico de Permanência e Êxito (PEPE) do IFRS.
     """
 )
@@ -75,5 +75,5 @@ st.markdown(
 
 st.markdown("---")
 st.caption(
-    "Fonte: Plataforma Nilo Peçanha (PNP) · Microdados de Matrículas 2017–2024 · "
+    "Fonte: Plataforma Nilo Peçanha (PNP) · Microdados de Matrículas 2017–2025 · "
 )

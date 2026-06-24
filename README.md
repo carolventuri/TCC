@@ -7,8 +7,9 @@ Desenvolver um painel de visualização de indicadores acadêmicos utilizando Py
 
 ## Estrutura
 
+- dados_brutos/ → dados baixados da Plataforma Nilo Peçanha
 - dados_tratados/ → dados após limpeza e transformação
-- notebooks/ → exploração e análises exploratórias
+- notebooks/ → preparacao dos dados e geração de gráficos
 - pages/ → painel de visualização
 
 ## Tecnologias
@@ -21,12 +22,15 @@ Desenvolver um painel de visualização de indicadores acadêmicos utilizando Py
 
 Após baixar o diretório do projeto:
 
-1) Criar um ambiente virtual:
+1) Para baixar os dados: Acessar a Plataforma Nilo Peçanha através do site https://www.gov.br/mec/pt-br/pnp , clicar em Acesse a Plataforma.
+Na página que abrir, clicar em Produtos de Dados e em seguida, em Microdados. Na página que abrir, salvar os microdados de Matrículas de cada ano na pasta dados_brutos do projeto e descompactar os arquivos.
+
+2) Criar um ambiente virtual:
 Abra o terminal no diretório do projeto e execute: python -m venv venv.
 Em seguida, ative-o com venv\Scripts\activate (Windows) ou source venv/bin/activate (Linux/macOS)
 
-2) Instalar as dependências necessárias:
+3) Instalar as dependências necessárias:
 No terminal no diretório do projeto execute: pip install -r requirements.txt
 
-3) Rodar a aplicação no navegador:
+4) Rodar a aplicação no navegador:
 No terminal no diretório do projeto execute: streamlit run Inicio.py

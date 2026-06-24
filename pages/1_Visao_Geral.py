@@ -284,7 +284,7 @@ with col_g6:
         color="Situação de Matrícula",
         barmode="stack",
         color_discrete_map=CORES_SITUACAO_LIGHT,
-        labels={"Qtd": "Matrículas", "Situação de Matrícula": "Motivo"},
+        labels={"Qtd": "Evadidos", "Situação de Matrícula": "Motivo"},
         text_auto=True,
     )
     fig_g6.update_xaxes(tickmode="linear", dtick=1)
@@ -327,7 +327,7 @@ with col_g7:
         barmode="stack",
         color_discrete_map=CORES_SITUACAO_LIGHT,
         text_auto=True,
-        labels={"Qtd": "Matrículas", "Nome de Curso": "", "Situação de Matrícula": "Motivo"},
+        labels={"Qtd": "Evadidos", "Nome de Curso": "", "Situação de Matrícula": "Motivo"},
         category_orders={"Nome de Curso": ordem_cursos},
     )
     aplicar_layout_light(fig_g7, legenda_y=-0.2)
@@ -437,7 +437,7 @@ with col_g9:
             orientation="h",
             text="Mediana",
             labels={
-                "Mediana": "Mediana (anos)",
+                "Mediana": "Tempo Mediano de Conclusão (anos)",
                 "Nome de Curso": ""
             },
             custom_data=["Media", "N", "Tipo de Curso"],
@@ -491,7 +491,7 @@ with col_g10:
             color_discrete_map=CORES_CURSO_LIGHT,
             points="outliers",
             labels={
-                "Anos_Conclusao": "Anos após o Ingresso",
+                "Anos_Conclusao": "Anos até Conclusão",
                 "Nome de Curso": ""
             },
             category_orders={"Nome de Curso": ordem_box},

@@ -104,7 +104,7 @@ def plot_heatmap_perfil(pivot, indicador, eixo_x, eixo_y):
 st.set_page_config(page_title="Perfil dos Estudantes", page_icon=":mortar_board:", layout="wide")
 st.title(":mortar_board: Perfil dos Estudantes")
 st.markdown(
-    " Perfil sociodemográfico das matrículas do IFRS Campus Restinga, com cruzamentos "
+    " #### Perfil sociodemográfico das matrículas do IFRS Campus Restinga, com cruzamentos "
     "de evasão e retenção por faixa etária, renda familiar, sexo, turno e cor/raça."
 )
 
@@ -232,7 +232,7 @@ with col_11:
         color="Qtd",
         color_continuous_scale="YlGnBu",
         text="Texto",
-        labels={"Qtd": "Matrículas", "Cor / Raça": ""},
+        labels={"Qtd": "Matrículas",},
     )
     fig_g16.update_traces(textposition="outside", cliponaxis=False)
     fig_g16.update_xaxes(range=[0, raca_df["Qtd"].max() * 1.25])
@@ -244,7 +244,7 @@ col_12, col_13 = st.columns(2)
 
 with col_12:
     st.markdown("### 17 — Distribuição por Renda Familiar")
-    st.markdown("Renda familiar per capita, em faixas de salário mínimo.")
+    st.markdown("Renda familiar per capita (RFP), em faixas de salário mínimo.")
 
     renda_df = (
         df.groupby("Renda Familiar")["Código da Matricula"]
@@ -296,7 +296,7 @@ with col_13:
         color="Turno",
         color_discrete_map=cores_turno,
         text="Texto",
-        labels={"Qtd": "Matrículas", "Turno": ""},
+        labels={"Qtd": "Matrículas",},
     )
     fig_g18.update_traces(textposition="outside", cliponaxis=False)
     aplicar_layout_light(fig_g18, altura=430)

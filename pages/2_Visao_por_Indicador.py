@@ -28,8 +28,8 @@ from utils import (
 st.set_page_config(page_title="Visão por Indicador", page_icon=":bar_chart:", layout="wide")
 st.title(":bar_chart: Visão por Indicador")
 st.markdown(
-    "Exibição detalhada dos indicadores acadêmicos por período, tipo de curso e curso. "
-    "Permitie observar quais cursos e tipos de curso mais contribuem para os resultados do campus."
+    "#### Exibição detalhada dos indicadores acadêmicos por período, tipo de curso e curso. "
+    "Permite observar quais cursos e tipos de curso mais contribuem para os resultados do campus."
 )
 
 # Carga dos dados
