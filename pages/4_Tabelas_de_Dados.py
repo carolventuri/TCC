@@ -18,8 +18,10 @@ from utils import (
 st.set_page_config(page_title="Tabelas de Dados", page_icon="📋", layout="wide")
 st.title("📋 Tabelas de Dados e Indicadores")
 st.markdown(
-    "Consulte e exporte os indicadores acadêmicos calculados para o IFRS Campus Restinga."
+    "#### Consulta e exportação dos dados e indicadores acadêmicos do IFRS Campus Restinga."
 )
+
+st.markdown("---")
 
 # Carga dos dados
 df_completo = carregar_dados(CAMINHO_DADOS)
@@ -53,18 +55,15 @@ df = df_completo[
     & (df_completo["Tipo de Curso"].isin(tipos_selecionados))
 ].copy()
 
-st.markdown("---")
-
 # Seletor de agrupamento
-st.markdown("### Agrupamento")
 
 agrupamento_opcoes = {
-    "Por Ano (campus completo)":   ["Ano"],
+    "Por Ano":   ["Ano"],
     "Por Ano e Curso":             ["Ano", "Nome de Curso"],
     "Por Ano e Tipo de Curso":     ["Ano", "Tipo de Curso"],
     "Por Ano e Eixo Tecnológico":  ["Ano", "Eixo Tecnológico"],
-    "Média por Curso (período)":   ["Nome de Curso"],
-    "Média por Tipo (período)":    ["Tipo de Curso"],
+    #"Média por Curso (período)":   ["Nome de Curso"],
+    #"Média por Tipo de Curso (período)":    ["Tipo de Curso"],
 }
 
 agrupamento_escolhido = st.radio(
@@ -94,8 +93,10 @@ colunas_exibir = [
 
 df_exibir = df_tabela[colunas_exibir].copy()
 
+st.markdown("---")
+
 # Exibição da tabela 
-st.markdown(f"### Resultado: {agrupamento_escolhido}")
+st.markdown(f"### Tabela de Dados e Indicadores {agrupamento_escolhido}")
 st.markdown(f"**{len(df_exibir)} linhas** · **{len(df_exibir.columns)} colunas**")
 
 # Aplica gradiente de cor nos indicadores para facilitar a leitura
@@ -144,8 +145,8 @@ st.markdown(
     | TR | Taxa de Retenção (%) |
     | IEf | Índice de Eficiência (%) |
     | TPE | Taxa de Permanência e Êxito (%) |
-    | MREG | Matrículas Ativas Regulares (contagem) |
-    | MRET | Matrículas Ativas Retidas (contagem) |
-    | matr_atendidas | Total de matrículas atendidas no período |
+    | MREG | Total de Matrículas Ativas Regulares |
+    | MRET | Total de Matrículas Ativas Retidas |
+    | matr_atendidas | Total de matrículas atendidas |
     """
 )

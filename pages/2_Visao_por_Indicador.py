@@ -32,6 +32,8 @@ st.markdown(
     "Permite observar quais cursos e tipos de curso mais contribuem para os resultados do campus."
 )
 
+st.markdown("---")
+
 # Carga dos dados
 df_completo = carregar_dados(CAMINHO_DADOS)
 
@@ -90,10 +92,23 @@ cores_tipo = gerar_mapa_cores(ind_ano_tipo["Tipo de Curso"])
 
 st.markdown("---")
 
+st.markdown(
+    f"""
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        {ROTULOS_INDICADORES[indicador]}
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+
+
+
 # 11 — Indicador por tipo de curso e ano
 st.markdown(f"### 11 — {ROTULOS_INDICADORES[indicador]} por Tipo de Curso e Ano")
 st.markdown(
-    "Compara a evolução do indicador entre os tipos de curso."
+    "Compara a evolução do indicador entre os tipos de curso durante o período selecionado."
 )
 
 fig_g11 = px.bar(
@@ -115,7 +130,7 @@ st.plotly_chart(fig_g11, width="stretch")
 # 12 — Ranking por curso no último ano filtrado
 st.markdown(f"### 12 — Ranking de {ROTULOS_INDICADORES[indicador]} por Curso ({ultimo_ano})")
 st.markdown(
-    "Ordena os cursos pelo valor do indicador no último ano disponível dentro dos filtros. "
+    f"Ordena os cursos pelo valor do indicador em {ultimo_ano} (último ano filtrado)."
 )
 
 ranking = (
@@ -155,7 +170,7 @@ st.plotly_chart(fig_g12, width="stretch")
 # 13 — Heatmap Curso × Ano
 st.markdown(f"### 13 —{ROTULOS_INDICADORES[indicador]} por Curso e Ano")
 st.markdown(
-    "Cada célula mostra o valor do indicador para um curso em um ano. Células vazias "
+    "Evolução do indicador por curso ao longo do período selecionado. Cada célula mostra o valor do indicador para um curso em um ano. Células vazias "
     "indicam ausência de dado para aquela combinação."
 )
 
@@ -182,7 +197,7 @@ st.plotly_chart(fig_g13, width="stretch")
 # 14 — Todos os indicadores por curso no último ano filtrado
 st.markdown(f"### 14 — Todos os Indicadores por Curso ({ultimo_ano})")
 st.markdown(
-    "Apresenta uma visão consolidada dos principais indicadores no último ano filtrado. "
+    f"Apresenta visão consolidada dos principais indicadores em {ultimo_ano} (último ano filtrado)."
 )
 
 indicadores = ['TC', 'TE', 'TR', 'IEf', 'TPE']

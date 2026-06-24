@@ -108,6 +108,20 @@ st.markdown(
     "de evasão e retenção por faixa etária, renda familiar, sexo, turno e cor/raça."
 )
 
+with st.expander("ℹ️ Como funciona o N mínimo por célula"):
+    st.write(
+        """
+        Os heatmaps desta página apresentam indicadores calculados para diferentes grupos de estudantes.
+    Quando um grupo possui poucas matrículas, os percentuais podem ser pouco representativos e sofrer
+    grandes variações. Por isso, é possível definir um **N mínimo por célula**. Sempre que um cruzamento possuir menos
+    matrículas do que o valor informado, a célula será exibida em branco, evitando interpretações
+    baseadas em grupos muito pequenos.
+        """
+    )
+
+
+st.markdown("---")
+
 # Carga dos dados
 df_completo = carregar_dados(CAMINHO_DADOS)
 
@@ -147,7 +161,10 @@ with col_f4:
         max_value=30,
         value=5,
         step=1,
-        help="Células de heatmap com menos matrículas que este valor ficam em branco.",
+        help="""
+        Define o número mínimo de matrículas necessário para que uma célula
+        seja exibida nos heatmaps. Grupos menores são ocultados.
+        """,
     )
 
 # Filtra dados
@@ -163,9 +180,17 @@ faixas_presentes = [f for f in ORDEM_ETARIA if f in df["Faixa Etária"].dropna()
 rendas_presentes = [r for r in ORDEM_RENDA if r in df["Renda Familiar"].dropna().unique()]
 
 
-# Perfil geral
+# SEÇÃO - PERFIL GERAL
 
-st.markdown(f"## Perfil Geral dos Estudantes ({ano_selecionado})")
+st.markdown(
+    f"""
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Perfil Geral dos Estudantes ({ano_selecionado})
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 col_10, col_11 = st.columns(2)
 
@@ -299,17 +324,25 @@ with col_13:
         labels={"Qtd": "Matrículas",},
     )
     fig_g18.update_traces(textposition="outside", cliponaxis=False)
+    fig_g18.update_layout(showlegend=False)
     aplicar_layout_light(fig_g18, altura=430)
     st.plotly_chart(fig_g18, width="stretch")
 
 st.markdown("---")
 
-# Evasão
+# SEÇÃO - TAXA DE EVASÃO POR PERFIL
 
-st.markdown(f"## Taxa de Evasão por Perfil ({ano_selecionado})")
+st.markdown(
+    f"""
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Taxa de Evasão por Perfil ({ano_selecionado})
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.markdown(
     "Cada célula mostra a taxa de evasão dentro do cruzamento analisado. "
-    f"Células com menos de **{n_minimo}** matrículas ficam em branco."
 )
 
 st.markdown("### 19 — Evasão: Faixa Etária × Renda Familiar")
@@ -333,12 +366,19 @@ with col_16:
 
 st.markdown("---")
 
-# Retenção
+# SEÇÃO - TAXA DE RETENÇÃO POR PERFIL
 
-st.markdown(f"## Taxa de Retenção por Perfil ({ano_selecionado})")
 st.markdown(
-    "A retenção considera matrículas classificadas como retidas, isto é, em curso após "
-    "o prazo previsto de conclusão."
+    f"""
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Taxa de Retenção por Perfil ({ano_selecionado})
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    "Cada célula mostra a taxa de retenção dentro do cruzamento analisado."
 )
 
 st.markdown("### 22 — Retenção: Faixa Etária × Renda Familiar")
@@ -362,9 +402,17 @@ with col_19:
 
 st.markdown("---")
 
-# Situação × Perfil Sociodemográfico]
+# SEÇÃO - SITUAÇÃO X CATEGORIA SOCIODEMOGRÁFICA
 
-st.markdown(f"## 25 — Situação × Categoria Sociodemográfica ({ano_selecionado})")
+st.markdown(
+    f"""
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Consolidado das Taxas de Evasão, Retenção e Conclusão por todas as Categorias Sociodemográficas ({ano_selecionado})
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)
+st.markdown(f"### 25 — Situação × Categoria Sociodemográfica")
 st.markdown(
     "Resumo visual das taxas de evasão, retenção e conclusão dentro de cada categoria "
     "sociodemográfica."
@@ -439,11 +487,3 @@ if not consolidado.empty:
     st.plotly_chart(fig_25, width="stretch")
 else:
     st.info("Não há categorias com tamanho mínimo suficiente para exibir a visão consolidada.")
-
-with st.expander("Como interpretar os heatmaps de perfil"):
-    st.markdown(
-        """
-        - A taxa de cada célula é calculada com base no total de matrículas distintas daquele cruzamento.
-        - Grupos muito pequenos podem produzir percentuais altos por acaso; por isso foi incluído o filtro de **N mínimo por célula**.
-        """
-    )

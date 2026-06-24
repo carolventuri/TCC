@@ -46,6 +46,8 @@ st.markdown(
     "#### Panorama geral de Permanência e Êxito dos Estudantes do IFRS Campus Restinga."
 )
 
+st.markdown("---")
+
 # Carga dos dados 
 df_completo = carregar_dados(CAMINHO_DADOS)
  
@@ -94,9 +96,20 @@ CORES_CURSO_LIGHT = gerar_mapa_cores(df["Nome de Curso"])
 ind_ano = calcular_indicadores(df, ["Ano"])
 
 
+
 st.markdown("---")
+
+
 # SEÇÃO — INDICADORES E MATRÍCULAS
-st.markdown("## Indicadores e Matrículas")
+
+st.markdown(
+    """
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Indicadores e Matrículas
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)   
   
 # 1: Evolução dos indicadores percentuais por ano (linhas)
 st.markdown("### 1 — Evolução dos Indicadores por Ano")
@@ -138,8 +151,7 @@ st.plotly_chart(fig_g1, width='stretch')
 # 2: Evolução de MREG e MRET por ano (linhas)
 st.markdown("### 2 — Matrículas Ativas Regulares (MREG) e Retidas (MRET) por Ano")
 st.markdown(
-    "MREG = Em fluxo + Ingressantes (dentro do prazo). "
-    "MRET = Retidos (além do prazo previsto). "
+    "MREG é o volume de matrículas ativas dentro do prazo previsto de conclusão e MRET é o volume de matrículas ativas além do prazo previsto de conclusão. "
 )
  
 matr_ativas_longo = ind_ano.melt(
@@ -169,7 +181,7 @@ col_g3, col_g4 = st.columns(2)
 with col_g3:
     st.markdown("### 3 — Matrículas por Ano e Categoria")
     st.markdown(
-        "Volume de matrículas por ano, separadas em Concluintes, Em curso e Evadidos."
+        "Volume de matrículas por ano, classificadas pela categoria de situação de matrícula (Concluintes, Em curso e Evadidos)."
     )
  
     mat_cat = (
@@ -197,7 +209,7 @@ with col_g4:
     st.markdown("### 4 — Ingressantes e Concluintes por Ano")
     st.markdown(
         "Compara quantos alunos entram (Ingressantes) e quantos saem formados "
-        "(Concluintes) a cada ano"
+        "(Concluintes) a cada ano."
     )
  
     fluxo_longo = ind_ano.melt(
@@ -231,7 +243,7 @@ with col_g4:
 # 5: Matrículas por curso e ano (barras empilhadas) 
 st.markdown("### 5 — Matrículas Atendidas por Curso e Ano")
 st.markdown(
-    "Mostra a evolução do volume de matrículas em cada curso ao longo do tempo."
+    "Mostra a evolução do volume de matrículas em cada curso por ano."
 )
  
 mat_curso_ano = (
@@ -258,7 +270,14 @@ st.markdown("---")
 
 # SEÇÃO — EVASÃO
 
-st.markdown("## Evasão")
+st.markdown(
+    """
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Evasão
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)   
 
 col_g6, col_g7 = st.columns(2)
 
@@ -266,7 +285,7 @@ with col_g6:
     # Gráfico 6: Motivos de Evasão por ano
     st.markdown("### 6 — Motivos de Evasão por Ano")
     st.markdown(
-        "Evolução do volume de cada tipo de evasão ao longo da série histórica. "
+        "Evolução do volume de cada tipo de evasão por ano. "
     )
 
     situacoes_evasao = ["Abandono", "Desligada", "Transf. externa", "Transf. interna"]
@@ -335,7 +354,17 @@ with col_g7:
 
 st.markdown("---")
 
-st.markdown("## Conclusão")
+
+# SEÇÃO — CONCLUSÃO
+
+st.markdown(
+    """
+    <h2 style="color:#2f9e41; text-decoration: underline;">
+        Conclusão
+    </h2>
+    """,
+    unsafe_allow_html=True,
+)   
 
 situacoes_conclusao = ["Concluída no prazo", "Concluída com atraso"]
 
@@ -357,8 +386,8 @@ df_conc = df_conc[
 
 st.markdown("### 8 — Conclusões no Prazo e Conclusões com Atraso por Curso")
 st.markdown(
-    "Volume de concluintes por curso separado em 'Concluída no prazo' e "
-    "'Concluída com atraso'."
+    "Volume de concluintes por curso classificado em 'Concluída no prazo' e "
+    "'Concluída com atraso' no período selecionado."
 )
 
 conc_prazo = (
@@ -404,18 +433,8 @@ col_g9, col_g10 = st.columns(2)
 with col_g9:
     st.markdown("### 9 — Tempo Mediano de Conclusão por Curso")
     st.markdown(
-        "Mediana de anos entre o ingresso e a conclusão do curso."
+        "Exibe o tempo mediano (em anos) entre o ingresso e a conclusão do curso no período selecionado."
     )
-
-    with st.expander("Como o tempo mediano de conclusão foi calculado"):
-        st.markdown(
-            """
-            **Base usada:** base filtrada da página: período, tipo de curso e curso, matrículas com situação **Concluída no prazo** ou **Concluída com atraso**.  
-            **Tempo individual de conclusão:** diferença entre **Mês De Ocorrência da Situação** e **Data de Inicio do Ciclo**, dividida por **365,25**.  
-            **Mediana por curso:** depois de calcular o tempo individual de cada concluinte, a mediana é calculada por curso.  
-            **Filtro de consistência:** foram mantidos tempos maiores que zero e menores que 15 anos.
-            """
-        )
 
     if len(df_conc) > 0:
         tempo_mediano = (
@@ -470,7 +489,7 @@ with col_g9:
 with col_g10:
     st.markdown("### 10 — Distribuição do Tempo até Conclusão por Curso")
     st.markdown(
-        "Boxplot complementa o gráfico 9: mostra a dispersão e os outliers."
+        "Mostra a dispersão do tempo até a conclusão por curso no período selecionado."
     )
 
     if len(df_conc) > 0:

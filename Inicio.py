@@ -19,7 +19,7 @@ st.title("IFRS Campus Restinga: Indicadores de Permanência e Êxito dos Estudan
 
 st.markdown(
     """
-    #### Bem-vindo(a) ao painel interativo de indicadores acadêmicos do **IFRS Campus Restinga**!
+    ### Bem-vindo(a) ao painel interativo de indicadores acadêmicos do **IFRS Campus Restinga**!
 
     Os dados são provenientes dos microdados de matrículas da Plataforma Nilo Peçanha (PNP),
     abrangendo o período de **2017 a 2025**, e os indicadores são calculados conforme as
@@ -37,20 +37,20 @@ st.markdown("### Use o menu lateral para acessar cada seção do dashboard:")
 
 st.markdown(
         """
-        :classical_building: **Visão Geral do Campus**: 
+        #### :classical_building: **Visão Geral**: 
         Panorama completo, demonstrando a evolução dos indicadores,
         volume de matrículas por ano, distribuição geral das situações de matrícula, evasão e conclusão.
         
-        :bar_chart: **Visão por Indicador**: 
-        Análise detalhada de cada indicador (TC, TE, TR, IEf, TPE, TEFAcad)
-        filtrada por curso e tipo de curso, com rankings e heatmaps.
+        #### :bar_chart: **Visão por Indicador**: 
+        Análise detalhada de cada indicador (TC, TE, TR, IEf, TPE)
+        filtrada por curso e tipo de curso.
        
-        :mortar_board: **Perfil dos Estudantes**: 
+        #### :mortar_board: **Perfil dos Estudantes**: 
         Distribuição sociodemográfica: sexo, cor/raça, faixa etária,
-        renda familiar e turno — com cruzamentos por evasão e retenção.
+        renda familiar e turno, com cruzamentos por evasão e retenção.
        
-        :clipboard: **Tabelas de Dados**: 
-        Consulta e exportação das tabelas de indicadores calculados,
+        #### :clipboard: **Tabelas de Dados**: 
+        Consulta e exportação das tabelas de dados e indicadores,
         com opção de download em formato CSV.
         """
 )
@@ -75,5 +75,5 @@ st.markdown(
 
 st.markdown("---")
 st.caption(
-    "Fonte: Plataforma Nilo Peçanha (PNP) · Microdados de Matrículas 2017–2025 · "
+    "Fonte: Plataforma Nilo Peçanha (PNP) - Microdados de Matrículas 2017–2025 "
 )
